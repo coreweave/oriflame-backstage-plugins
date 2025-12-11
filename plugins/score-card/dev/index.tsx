@@ -90,6 +90,16 @@ createDevApp()
             });
           });
         },
+        async getEntitiesByRef(
+          _request: { entityRefs: string[] },
+          _options?: CatalogRequestOptions,
+        ) {
+          return new Promise<GetEntitiesResponse>((resolve, _reject) => {
+            resolve({
+              items: mockEntities.slice(),
+            });
+          });
+        },
         async getEntityByName(
           compoundName: CompoundEntityRef,
           _options?: CatalogRequestOptions,

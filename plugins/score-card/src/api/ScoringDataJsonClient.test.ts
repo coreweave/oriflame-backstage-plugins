@@ -16,7 +16,11 @@
 
 import { MockConfigApi, MockFetchApi } from '@backstage/test-utils';
 import { CatalogApi } from '@backstage/plugin-catalog-react';
-import { Entity } from '@backstage/catalog-model';
+import {
+  Entity,
+  parseEntityRef,
+  stringifyEntityRef,
+} from '@backstage/catalog-model';
 import { ScoringDataJsonClient } from './ScoringDataJsonClient';
 import {
   GetEntitiesRequest,
@@ -76,6 +80,28 @@ const getEntitiesMock = (
       ? items.filter(item => filterKinds.find(k => k === item.kind))
       : items,
   } as GetEntitiesResponse);
+};
+
+const getEntitiesByRefMock = (request?: {
+  entityRefs?: unknown[];
+}): Promise<{ items: Entity[] }> => {
+  const names =
+    request?.entityRefs
+      ?.map(ref => {
+        if (typeof ref === 'string') {
+          return parseEntityRef(ref).name.toLowerCase();
+        }
+        if (ref && typeof ref === 'object' && 'name' in ref) {
+          return String((ref as any).name).toLowerCase();
+        }
+        return '';
+      })
+      .filter(Boolean) ?? [];
+  return Promise.resolve({
+    items: items.filter(item =>
+      names.includes(item.metadata.name.toLowerCase()),
+    ),
+  });
 };
 
 const getAllEntitiesMock = (
@@ -149,9 +175,10 @@ describe('ScoringDataJsonClient-getAllScores', () => {
   it('should get all scores', async () => {
     const catalogApi: jest.Mocked<CatalogApi> = {
       getEntities: jest.fn(),
+      getEntitiesByRef: jest.fn(),
     } as any;
 
-    catalogApi.getEntities.mockImplementation(getEntitiesMock);
+    catalogApi.getEntitiesByRef.mockImplementation(getEntitiesByRefMock);
 
     const mockConfig = new MockConfigApi({
       app: { baseUrl: 'https://example.com' },
@@ -198,6 +225,7 @@ describe('ScoringDataJsonClient-getAllScores', () => {
   it('should get all scores and fetch all entities', async () => {
     const catalogApi: jest.Mocked<CatalogApi> = {
       getEntities: jest.fn(),
+      getEntitiesByRef: jest.fn(),
     } as any;
 
     catalogApi.getEntities.mockImplementation(getAllEntitiesMock);
@@ -248,9 +276,10 @@ describe('ScoringDataJsonClient-getAllScores', () => {
   it('should filter entities by kind', async () => {
     const catalogApi: jest.Mocked<CatalogApi> = {
       getEntities: jest.fn(),
+      getEntitiesByRef: jest.fn(),
     } as any;
 
-    catalogApi.getEntities.mockImplementation(getEntitiesMock);
+    catalogApi.getEntitiesByRef.mockImplementation(getEntitiesByRefMock);
 
     const mockConfig = new MockConfigApi({
       app: { baseUrl: 'https://example.com' },
