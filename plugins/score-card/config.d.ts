@@ -41,5 +41,11 @@ export interface Config {
      * @visibility frontend
      */
      wikiLinkTemplate?: string;
+
+    /**
+     * If true, fetches all entities from the catalog and filters client-side to avoid long query strings.
+     * @visibility frontend
+     */
+    fetchAllEntities?: boolean;
   };
 }
