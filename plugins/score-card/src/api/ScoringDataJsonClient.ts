@@ -138,17 +138,35 @@ export class ScoringDataJsonClient implements ScoringDataApi {
 
     const fetchAllEntities =
       this.configApi.getOptionalBoolean('scorecards.fetchAllEntities') ?? false;
-    const response = await this.catalogApi.getEntities({
-      filter: fetchAllEntities
-        ? undefined
-        : {
-            'metadata.name': Array.from(entity_names),
-          },
-      fields: ['kind', 'metadata.name', 'spec.owner', 'relations'],
-    });
-    const entities: Entity[] = fetchAllEntities
-      ? response.items.filter(i => entity_names.has(i.metadata.name))
-      : response.items;
+    let entities: Entity[] = [];
+    if (fetchAllEntities) {
+      const response = await this.catalogApi.getEntities({
+        fields: ['kind', 'metadata.name', 'spec.owner', 'relations'],
+      });
+      entities = response.items.filter(i => entity_names.has(i.metadata.name));
+    } else {
+      const entityRefs = Array.from(
+        result.reduce((acc, score) => {
+          if (score.entityRef?.name && score.entityRef.kind) {
+            acc.add(
+              stringifyEntityRef({
+                kind: score.entityRef.kind,
+                name: score.entityRef.name,
+                namespace: score.entityRef.namespace ?? DEFAULT_NAMESPACE,
+              }),
+            );
+          }
+          return acc;
+        }, new Set<string>()),
+      );
+      const response = await this.catalogApi.getEntitiesByRef({
+        entityRefs,
+        fields: ['kind', 'metadata.name', 'spec.owner', 'relations'],
+      });
+      entities = response.items.filter(
+        (entity): entity is Entity => Boolean(entity),
+      );
+    }
 
     return result.map<EntityScoreExtended>((score: EntityScore) => {
       return this.extendEntityScore(score, entities);

@@ -16,7 +16,11 @@
 
 import { MockConfigApi, MockFetchApi } from '@backstage/test-utils';
 import { CatalogApi } from '@backstage/plugin-catalog-react';
-import { Entity } from '@backstage/catalog-model';
+import {
+  Entity,
+  parseEntityRef,
+  stringifyEntityRef,
+} from '@backstage/catalog-model';
 import { ScoringDataJsonClient } from './ScoringDataJsonClient';
 import {
   GetEntitiesRequest,
@@ -34,7 +38,7 @@ const items = [
     apiVersion: 'backstage.io/v1alpha1',
     kind: 'API',
     metadata: {
-      name: 'Api 1',
+      name: 'Api-1',
     },
     spec: {
       type: 'openapi',
@@ -50,7 +54,7 @@ const items = [
     apiVersion: 'backstage.io/v1alpha1',
     kind: 'System',
     metadata: {
-      name: 'System 1',
+      name: 'System-1',
     },
     spec: {
       type: 'openapi',
@@ -76,6 +80,28 @@ const getEntitiesMock = (
       ? items.filter(item => filterKinds.find(k => k === item.kind))
       : items,
   } as GetEntitiesResponse);
+};
+
+const getEntitiesByRefMock = (request?: {
+  entityRefs?: unknown[];
+}): Promise<{ items: Entity[] }> => {
+  const names =
+    request?.entityRefs
+      ?.map(ref => {
+        if (typeof ref === 'string') {
+          return parseEntityRef(ref).name.toLowerCase();
+        }
+        if (ref && typeof ref === 'object' && 'name' in ref) {
+          return String((ref as any).name).toLowerCase();
+        }
+        return '';
+      })
+      .filter(Boolean) ?? [];
+  return Promise.resolve({
+    items: items.filter(item =>
+      names.includes(item.metadata.name.toLowerCase()),
+    ),
+  });
 };
 
 const getAllEntitiesMock = (
@@ -107,22 +133,38 @@ const sampleData = [
   {
     entityRef: {
       kind: 'api',
-      name: 'Api 1',
+      name: 'Api-1',
     },
     scorePercent: 75,
     scoringReviewDate: '2022-01-01T08:00:00Z',
-    scoringReviewer: 'Reviewer 1',
+    scoringReviewer: 'Reviewer-1',
     areaScores: [],
   },
   {
     entityRef: {
       kind: 'system',
-      name: 'System 1',
+      name: 'System-1',
     },
     scorePercent: 80,
     scoringReviewDate: '2022-01-01T08:00:00Z',
-    scoringReviewer: 'Reviewer 2',
-    areaScores: [],
+    scoringReviewer: 'Reviewer-2',
+    areaScores: [
+      {
+        scoreEntries: [
+          {
+            details: "",
+            scoreLabel: "L1",
+            scorePercent: 33,
+            scoreSuccess: "partial",
+            title: "Dummy"
+          }
+        ],
+        scoreLabel: "L1",
+        scorePercent: 33,
+        scoreSuccess: "partial",
+        title: "Observability"
+      }
+    ],
   },
 ];
 
@@ -146,40 +188,58 @@ describe('ScoringDataJsonClient-getAllScores', () => {
     jest.restoreAllMocks();
   });
 
-  it('should get all scores', async () => {
+  it('should default to all scores if not filtered', async () => {
     const catalogApi: jest.Mocked<CatalogApi> = {
       getEntities: jest.fn(),
+      getEntitiesByRef: jest.fn(),
     } as any;
 
-    catalogApi.getEntities.mockImplementation(getEntitiesMock);
+    catalogApi.getEntitiesByRef.mockImplementation(getEntitiesByRefMock);
 
     const mockConfig = new MockConfigApi({
       app: { baseUrl: 'https://example.com' },
+      scorecards: { fetchAllEntities: false },
     });
     const mockFetch = new MockFetchApi();
 
     const expected = [
       {
         areaScores: [],
-        entityRef: { kind: 'api', name: 'Api 1' },
-        id: 'api:default/api 1',
+        entityRef: { kind: 'api', name: 'Api-1' },
+        id: 'api:default/api-1',
         owner: { kind: 'group', name: 'team1', namespace: 'default' },
         reviewDate: new Date('2022-01-01T08:00:00.000Z'),
-        reviewer: { kind: 'User', name: 'Reviewer 1', namespace: 'default' },
+        reviewer: { kind: 'User', name: 'Reviewer-1', namespace: 'default' },
         scorePercent: 75,
         scoringReviewDate: '2022-01-01T08:00:00Z',
-        scoringReviewer: 'Reviewer 1',
+        scoringReviewer: 'Reviewer-1',
       },
       {
-        areaScores: [],
-        entityRef: { kind: 'system', name: 'System 1' },
-        id: 'system:default/system 1',
+        areaScores: [
+          {
+            scoreEntries: [
+              {
+                details: "",
+                scoreLabel: "L1",
+                scorePercent: 33,
+                scoreSuccess: "partial",
+                title: "Dummy",
+              },
+            ],
+            scoreLabel: "L1",
+            scorePercent: 33,
+            scoreSuccess: "partial",
+            title: "Observability",
+          },
+        ],
+        entityRef: { kind: 'system', name: 'System-1' },
+        id: 'system:default/system-1',
         owner: { kind: 'group', name: 'team2', namespace: 'default' },
         reviewDate: new Date('2022-01-01T08:00:00.000Z'),
-        reviewer: { kind: 'User', name: 'Reviewer 2', namespace: 'default' },
+        reviewer: { kind: 'User', name: 'Reviewer-2', namespace: 'default' },
         scorePercent: 80,
         scoringReviewDate: '2022-01-01T08:00:00Z',
-        scoringReviewer: 'Reviewer 2',
+        scoringReviewer: 'Reviewer-2',
       },
     ];
 
@@ -195,9 +255,10 @@ describe('ScoringDataJsonClient-getAllScores', () => {
     expect(entities).toEqual(expected);
   });
 
-  it('should get all scores and fetch all entities', async () => {
+  it('should get all scores and fetch all entities with fetchAllEntities=true', async () => {
     const catalogApi: jest.Mocked<CatalogApi> = {
       getEntities: jest.fn(),
+      getEntitiesByRef: jest.fn(),
     } as any;
 
     catalogApi.getEntities.mockImplementation(getAllEntitiesMock);
@@ -211,25 +272,41 @@ describe('ScoringDataJsonClient-getAllScores', () => {
     const expected = [
       {
         areaScores: [],
-        entityRef: { kind: 'api', name: 'Api 1' },
-        id: 'api:default/api 1',
+        entityRef: { kind: 'api', name: 'Api-1' },
+        id: 'api:default/api-1',
         owner: { kind: 'group', name: 'team1', namespace: 'default' },
         reviewDate: new Date('2022-01-01T08:00:00.000Z'),
-        reviewer: { kind: 'User', name: 'Reviewer 1', namespace: 'default' },
+        reviewer: { kind: 'User', name: 'Reviewer-1', namespace: 'default' },
         scorePercent: 75,
         scoringReviewDate: '2022-01-01T08:00:00Z',
-        scoringReviewer: 'Reviewer 1',
+        scoringReviewer: 'Reviewer-1',
       },
       {
-        areaScores: [],
-        entityRef: { kind: 'system', name: 'System 1' },
-        id: 'system:default/system 1',
+        areaScores: [
+          {
+            "scoreEntries": [
+              {
+                "details": "",
+                "scoreLabel": "L1",
+                "scorePercent": 33,
+                "scoreSuccess": "partial",
+                "title": "Dummy",
+              },
+            ],
+            "scoreLabel": "L1",
+            "scorePercent": 33,
+            "scoreSuccess": "partial",
+            "title": "Observability",
+          },
+        ],
+        entityRef: { kind: 'system', name: 'System-1' },
+        id: 'system:default/system-1',
         owner: { kind: 'group', name: 'team2', namespace: 'default' },
         reviewDate: new Date('2022-01-01T08:00:00.000Z'),
-        reviewer: { kind: 'User', name: 'Reviewer 2', namespace: 'default' },
+        reviewer: { kind: 'User', name: 'Reviewer-2', namespace: 'default' },
         scorePercent: 80,
         scoringReviewDate: '2022-01-01T08:00:00Z',
-        scoringReviewer: 'Reviewer 2',
+        scoringReviewer: 'Reviewer-2',
       },
     ];
 
@@ -248,26 +325,28 @@ describe('ScoringDataJsonClient-getAllScores', () => {
   it('should filter entities by kind', async () => {
     const catalogApi: jest.Mocked<CatalogApi> = {
       getEntities: jest.fn(),
+      getEntitiesByRef: jest.fn(),
     } as any;
 
-    catalogApi.getEntities.mockImplementation(getEntitiesMock);
+    catalogApi.getEntitiesByRef.mockImplementation(getEntitiesByRefMock);
 
     const mockConfig = new MockConfigApi({
       app: { baseUrl: 'https://example.com' },
+      scorecards: { fetchAllEntities: false },
     });
     const mockFetch = new MockFetchApi();
 
     const expected = [
       {
         areaScores: [],
-        entityRef: { kind: 'api', name: 'Api 1' },
-        id: 'api:default/api 1',
+        entityRef: { kind: 'api', name: 'Api-1' },
+        id: 'api:default/api-1',
         owner: { kind: 'group', name: 'team1', namespace: 'default' },
         reviewDate: new Date('2022-01-01T08:00:00.000Z'),
-        reviewer: { kind: 'User', name: 'Reviewer 1', namespace: 'default' },
+        reviewer: { kind: 'User', name: 'Reviewer-1', namespace: 'default' },
         scorePercent: 75,
         scoringReviewDate: '2022-01-01T08:00:00Z',
-        scoringReviewer: 'Reviewer 1',
+        scoringReviewer: 'Reviewer-1',
       },
     ];
 
@@ -283,7 +362,7 @@ describe('ScoringDataJsonClient-getAllScores', () => {
     expect(entities).toEqual(expected);
   });
   describe('getScores', () => {
-    it('should retrieve json from location in annotation', async () => {
+    it('should retrieve json from location in annotation, with fetchAllScores=false', async () => {
       const entity = {
         apiVersion: 'backstage.io/v1alpha1',
         kind: 'component',
@@ -317,7 +396,7 @@ describe('ScoringDataJsonClient-getAllScores', () => {
         },
         scorePercent: 75,
         scoringReviewDate: '2022-01-01T08:00:00Z',
-        scoringReviewer: 'CustomReviewier 1',
+        scoringReviewer: 'CustomReviewer-1',
         areaScores: [],
       };
 
@@ -332,6 +411,7 @@ describe('ScoringDataJsonClient-getAllScores', () => {
 
       const mockConfig = new MockConfigApi({
         app: { baseUrl: 'https://example.com' },
+        scorecards: { fetchAllEntities: false },
       });
       const mockFetch = new MockFetchApi();
 
@@ -343,12 +423,91 @@ describe('ScoringDataJsonClient-getAllScores', () => {
         reviewDate: new Date('2022-01-01T08:00:00.000Z'),
         reviewer: {
           kind: 'User',
-          name: 'CustomReviewier 1',
+          name: 'CustomReviewer-1',
           namespace: 'default',
         },
         scorePercent: 75,
         scoringReviewDate: '2022-01-01T08:00:00Z',
-        scoringReviewer: 'CustomReviewier 1',
+        scoringReviewer: 'CustomReviewer-1',
+      };
+      const api = new ScoringDataJsonClient({
+        configApi: mockConfig,
+        fetchApi: mockFetch,
+        catalogApi: catalogApi,
+        scmAuthApi,
+        scmIntegrationsApi,
+      });
+
+      const entities = await api.getScore(entity);
+      expect(entities).toEqual(expected);
+    });
+    it('should retrieve json from location in annotation, with fetchAllScores=true', async () => {
+      const entity = {
+        apiVersion: 'backstage.io/v1alpha1',
+        kind: 'component',
+        metadata: {
+          name: 'custom-annotation-location',
+          annotations: {
+            'scorecard/jsonDataUrl':
+              'https://custom-score-url/custom-scores.json',
+          },
+        },
+        relations: [
+          {
+            type: 'ownedBy',
+            targetRef: 'group:default/team1',
+          },
+        ],
+      } as Entity;
+
+      const catalogApi: jest.Mocked<CatalogApi> = {
+        getEntities: jest.fn(),
+      } as any;
+
+      catalogApi.getEntities.mockResolvedValue({
+        items: [entity],
+      });
+
+      const customData = {
+        entityRef: {
+          kind: 'component',
+          name: 'custom-annotation-location',
+        },
+        scorePercent: 75,
+        scoringReviewDate: '2022-01-01T08:00:00Z',
+        scoringReviewer: 'CustomReviewer-1',
+        areaScores: [],
+      };
+
+      server.use(
+        rest.get(
+          'https://custom-score-url/custom-scores.json',
+          (_req, res, ctx) => {
+            return res(ctx.status(200), ctx.json(customData));
+          },
+        ),
+      );
+
+      const mockConfig = new MockConfigApi({
+        app: { baseUrl: 'https://example.com' },
+        scorecards: { fetchAllEntities: true },
+      });
+      const mockFetch = new MockFetchApi();
+
+      const expected = {
+        areaScores: [],
+        entityRef: { kind: 'component', name: 'custom-annotation-location' },
+        id: 'component:default/custom-annotation-location',
+        owner: { kind: 'group', name: 'team1', namespace: 'default' },
+        reviewDate: new Date('2022-01-01T08:00:00.000Z'),
+        reviewer: {
+          kind: 'User',
+          name: 'CustomReviewer-1',
+          namespace: 'default',
+        },
+        scorePercent: 75,
+        scoringReviewDate: '2022-01-01T08:00:00Z',
+        scoringReviewer: 'CustomReviewer-1',
       };
       const api = new ScoringDataJsonClient({
         configApi: mockConfig,
