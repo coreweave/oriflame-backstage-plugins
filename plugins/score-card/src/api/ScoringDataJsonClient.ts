@@ -159,7 +159,7 @@ export class ScoringDataJsonClient implements ScoringDataApi {
           return acc;
         }, new Set<string>()),
       );
-      const response = await this.catalogApi.getEntitiesByRef({
+      const response = await this.catalogApi.getEntitiesByRefs({
         entityRefs,
         fields: ['kind', 'metadata.name', 'spec.owner', 'relations'],
       });

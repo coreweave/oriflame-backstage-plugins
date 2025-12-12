@@ -19,7 +19,6 @@ import { CatalogApi } from '@backstage/plugin-catalog-react';
 import {
   Entity,
   parseEntityRef,
-  stringifyEntityRef,
 } from '@backstage/catalog-model';
 import { ScoringDataJsonClient } from './ScoringDataJsonClient';
 import {
@@ -67,20 +66,6 @@ const items = [
     ],
   },
 ] as Entity[];
-
-const getEntitiesMock = (
-  request?: GetEntitiesRequest,
-): Promise<GetEntitiesResponse> => {
-  const filterKinds =
-    Array.isArray(request?.filter) && Array.isArray(request?.filter[0].kind)
-      ? request?.filter[0].kind ?? []
-      : [];
-  return Promise.resolve({
-    items: filterKinds.length
-      ? items.filter(item => filterKinds.find(k => k === item.kind))
-      : items,
-  } as GetEntitiesResponse);
-};
 
 const getEntitiesByRefMock = (request?: {
   entityRefs?: unknown[];
@@ -191,10 +176,10 @@ describe('ScoringDataJsonClient-getAllScores', () => {
   it('should default to all scores if not filtered', async () => {
     const catalogApi: jest.Mocked<CatalogApi> = {
       getEntities: jest.fn(),
-      getEntitiesByRef: jest.fn(),
+      getEntitiesByRefs: jest.fn(),
     } as any;
 
-    catalogApi.getEntitiesByRef.mockImplementation(getEntitiesByRefMock);
+    catalogApi.getEntitiesByRefs.mockImplementation(getEntitiesByRefMock);
 
     const mockConfig = new MockConfigApi({
       app: { baseUrl: 'https://example.com' },
@@ -258,7 +243,7 @@ describe('ScoringDataJsonClient-getAllScores', () => {
   it('should get all scores and fetch all entities with fetchAllEntities=true', async () => {
     const catalogApi: jest.Mocked<CatalogApi> = {
       getEntities: jest.fn(),
-      getEntitiesByRef: jest.fn(),
+      getEntitiesByRefs: jest.fn(),
     } as any;
 
     catalogApi.getEntities.mockImplementation(getAllEntitiesMock);
@@ -325,10 +310,10 @@ describe('ScoringDataJsonClient-getAllScores', () => {
   it('should filter entities by kind', async () => {
     const catalogApi: jest.Mocked<CatalogApi> = {
       getEntities: jest.fn(),
-      getEntitiesByRef: jest.fn(),
+      getEntitiesByRefs: jest.fn(),
     } as any;
 
-    catalogApi.getEntitiesByRef.mockImplementation(getEntitiesByRefMock);
+    catalogApi.getEntitiesByRefs.mockImplementation(getEntitiesByRefMock);
 
     const mockConfig = new MockConfigApi({
       app: { baseUrl: 'https://example.com' },

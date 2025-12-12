@@ -91,7 +91,7 @@ const devApp = createDevApp()
             });
           });
         },
-        async getEntitiesByRef(
+        async getEntitiesByRefs(
           _request: { entityRefs: string[] },
           _options?: CatalogRequestOptions,
         ) {
