@@ -200,7 +200,7 @@ describe('EntityScoreCardTable-TestWithData', () => {
     jest.useFakeTimers();
 
     const errorApi = { post: () => {} };
-    const { container } = render(
+    const { getByText, findByTestId } = render(
       <ThemeProvider theme={lightTheme}>
         <TestApiProvider
           apis={[
@@ -219,7 +219,9 @@ describe('EntityScoreCardTable-TestWithData', () => {
       </ThemeProvider>,
     );
 
-    expect(container).toBeInTheDocument();
+    await findByTestId('score-board-table');
+    const title = await getByText('testTitle');
+    expect(title).toHaveTextContent(/testTitle/);
   });
 });
 
