@@ -148,7 +148,23 @@ const sampleData = [
     scorePercent: 80,
     scoringReviewDate: '2022-01-01T08:00:00Z',
     scoringReviewer: 'Reviewer-2',
-    areaScores: [],
+    areaScores: [
+      {
+        scoreEntries: [
+          {
+            details: "",
+            scoreLabel: "L1",
+            scorePercent: 33,
+            scoreSuccess: "partial",
+            title: "Dummy"
+          }
+        ],
+        scoreLabel: "L1",
+        scorePercent: 33,
+        scoreSuccess: "partial",
+        title: "Observability"
+      }
+    ],
   },
 ];
 
@@ -172,7 +188,7 @@ describe('ScoringDataJsonClient-getAllScores', () => {
     jest.restoreAllMocks();
   });
 
-  it('should get all scores', async () => {
+  it('should default to all scores if not filtered', async () => {
     const catalogApi: jest.Mocked<CatalogApi> = {
       getEntities: jest.fn(),
       getEntitiesByRef: jest.fn(),
@@ -182,6 +198,7 @@ describe('ScoringDataJsonClient-getAllScores', () => {
 
     const mockConfig = new MockConfigApi({
       app: { baseUrl: 'https://example.com' },
+      scorecards: { fetchAllEntities: false },
     });
     const mockFetch = new MockFetchApi();
 
@@ -198,7 +215,23 @@ describe('ScoringDataJsonClient-getAllScores', () => {
         scoringReviewer: 'Reviewer-1',
       },
       {
-        areaScores: [],
+        areaScores: [
+          {
+            scoreEntries: [
+              {
+                details: "",
+                scoreLabel: "L1",
+                scorePercent: 33,
+                scoreSuccess: "partial",
+                title: "Dummy",
+              },
+            ],
+            scoreLabel: "L1",
+            scorePercent: 33,
+            scoreSuccess: "partial",
+            title: "Observability",
+          },
+        ],
         entityRef: { kind: 'system', name: 'System-1' },
         id: 'system:default/system-1',
         owner: { kind: 'group', name: 'team2', namespace: 'default' },
@@ -222,7 +255,7 @@ describe('ScoringDataJsonClient-getAllScores', () => {
     expect(entities).toEqual(expected);
   });
 
-  it('should get all scores and fetch all entities', async () => {
+  it('should get all scores and fetch all entities with fetchAllEntities=true', async () => {
     const catalogApi: jest.Mocked<CatalogApi> = {
       getEntities: jest.fn(),
       getEntitiesByRef: jest.fn(),
@@ -249,7 +282,23 @@ describe('ScoringDataJsonClient-getAllScores', () => {
         scoringReviewer: 'Reviewer-1',
       },
       {
-        areaScores: [],
+        areaScores: [
+          {
+            "scoreEntries": [
+              {
+                "details": "",
+                "scoreLabel": "L1",
+                "scorePercent": 33,
+                "scoreSuccess": "partial",
+                "title": "Dummy",
+              },
+            ],
+            "scoreLabel": "L1",
+            "scorePercent": 33,
+            "scoreSuccess": "partial",
+            "title": "Observability",
+          },
+        ],
         entityRef: { kind: 'system', name: 'System-1' },
         id: 'system:default/system-1',
         owner: { kind: 'group', name: 'team2', namespace: 'default' },
@@ -283,6 +332,7 @@ describe('ScoringDataJsonClient-getAllScores', () => {
 
     const mockConfig = new MockConfigApi({
       app: { baseUrl: 'https://example.com' },
+      scorecards: { fetchAllEntities: false },
     });
     const mockFetch = new MockFetchApi();
 
@@ -312,7 +362,7 @@ describe('ScoringDataJsonClient-getAllScores', () => {
     expect(entities).toEqual(expected);
   });
   describe('getScores', () => {
-    it('should retrieve json from location in annotation', async () => {
+    it('should retrieve json from location in annotation, with fetchAllScores=false', async () => {
       const entity = {
         apiVersion: 'backstage.io/v1alpha1',
         kind: 'component',
@@ -361,6 +411,86 @@ describe('ScoringDataJsonClient-getAllScores', () => {
 
       const mockConfig = new MockConfigApi({
         app: { baseUrl: 'https://example.com' },
+        scorecards: { fetchAllEntities: false },
+      });
+      const mockFetch = new MockFetchApi();
+
+      const expected = {
+        areaScores: [],
+        entityRef: { kind: 'component', name: 'custom-annotation-location' },
+        id: 'component:default/custom-annotation-location',
+        owner: { kind: 'group', name: 'team1', namespace: 'default' },
+        reviewDate: new Date('2022-01-01T08:00:00.000Z'),
+        reviewer: {
+          kind: 'User',
+          name: 'CustomReviewer-1',
+          namespace: 'default',
+        },
+        scorePercent: 75,
+        scoringReviewDate: '2022-01-01T08:00:00Z',
+        scoringReviewer: 'CustomReviewer-1',
+      };
+      const api = new ScoringDataJsonClient({
+        configApi: mockConfig,
+        fetchApi: mockFetch,
+        catalogApi: catalogApi,
+        scmAuthApi,
+        scmIntegrationsApi,
+      });
+
+      const entities = await api.getScore(entity);
+      expect(entities).toEqual(expected);
+    });
+    it('should retrieve json from location in annotation, with fetchAllScores=true', async () => {
+      const entity = {
+        apiVersion: 'backstage.io/v1alpha1',
+        kind: 'component',
+        metadata: {
+          name: 'custom-annotation-location',
+          annotations: {
+            'scorecard/jsonDataUrl':
+              'https://custom-score-url/custom-scores.json',
+          },
+        },
+        relations: [
+          {
+            type: 'ownedBy',
+            targetRef: 'group:default/team1',
+          },
+        ],
+      } as Entity;
+
+      const catalogApi: jest.Mocked<CatalogApi> = {
+        getEntities: jest.fn(),
+      } as any;
+
+      catalogApi.getEntities.mockResolvedValue({
+        items: [entity],
+      });
+
+      const customData = {
+        entityRef: {
+          kind: 'component',
+          name: 'custom-annotation-location',
+        },
+        scorePercent: 75,
+        scoringReviewDate: '2022-01-01T08:00:00Z',
+        scoringReviewer: 'CustomReviewer-1',
+        areaScores: [],
+      };
+
+      server.use(
+        rest.get(
+          'https://custom-score-url/custom-scores.json',
+          (_req, res, ctx) => {
+            return res(ctx.status(200), ctx.json(customData));
+          },
+        ),
+      );
+
+      const mockConfig = new MockConfigApi({
+        app: { baseUrl: 'https://example.com' },
+        scorecards: { fetchAllEntities: true },
       });
       const mockFetch = new MockFetchApi();
 
