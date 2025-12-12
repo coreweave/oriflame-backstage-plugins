@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import React from 'react';
+import { createRoot } from 'react-dom/client';
 import { createDevApp, DevAppPageOptions } from '@backstage/dev-utils';
 import { CompoundEntityRef, Entity } from '@backstage/catalog-model';
 import { Content, Header, HeaderLabel, Page } from '@backstage/core-components';
@@ -73,7 +74,7 @@ const mockEntities = [
   entityGuestUser,
 ] as unknown as Entity[];
 
-createDevApp()
+const devApp = createDevApp()
   .registerPlugin(scoreCardPlugin)
   .registerApi({
     api: catalogApiRef,
@@ -128,5 +129,19 @@ createDevApp()
     element: <ScoreBoardPage />,
     title: 'Score Board',
     path: '/score-card',
-  })
-  .render();
+  });
+
+const DevApp = devApp.build();
+const defaultPage = (devApp as unknown as { defaultPage?: string }).defaultPage;
+
+const container = document.getElementById('root');
+
+if (!container) {
+  throw new Error('Root element not found');
+}
+
+if (window.location.pathname === '/' && defaultPage && defaultPage !== '/') {
+  window.location.pathname = defaultPage;
+}
+
+createRoot(container).render(<DevApp />);
