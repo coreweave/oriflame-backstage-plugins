@@ -38,7 +38,7 @@ const items = [
     apiVersion: 'backstage.io/v1alpha1',
     kind: 'API',
     metadata: {
-      name: 'Api 1',
+      name: 'Api-1',
     },
     spec: {
       type: 'openapi',
@@ -54,7 +54,7 @@ const items = [
     apiVersion: 'backstage.io/v1alpha1',
     kind: 'System',
     metadata: {
-      name: 'System 1',
+      name: 'System-1',
     },
     spec: {
       type: 'openapi',
@@ -133,21 +133,21 @@ const sampleData = [
   {
     entityRef: {
       kind: 'api',
-      name: 'Api 1',
+      name: 'Api-1',
     },
     scorePercent: 75,
     scoringReviewDate: '2022-01-01T08:00:00Z',
-    scoringReviewer: 'Reviewer 1',
+    scoringReviewer: 'Reviewer-1',
     areaScores: [],
   },
   {
     entityRef: {
       kind: 'system',
-      name: 'System 1',
+      name: 'System-1',
     },
     scorePercent: 80,
     scoringReviewDate: '2022-01-01T08:00:00Z',
-    scoringReviewer: 'Reviewer 2',
+    scoringReviewer: 'Reviewer-2',
     areaScores: [],
   },
 ];
@@ -188,25 +188,25 @@ describe('ScoringDataJsonClient-getAllScores', () => {
     const expected = [
       {
         areaScores: [],
-        entityRef: { kind: 'api', name: 'Api 1' },
-        id: 'api:default/api 1',
+        entityRef: { kind: 'api', name: 'Api-1' },
+        id: 'api:default/api-1',
         owner: { kind: 'group', name: 'team1', namespace: 'default' },
         reviewDate: new Date('2022-01-01T08:00:00.000Z'),
-        reviewer: { kind: 'User', name: 'Reviewer 1', namespace: 'default' },
+        reviewer: { kind: 'User', name: 'Reviewer-1', namespace: 'default' },
         scorePercent: 75,
         scoringReviewDate: '2022-01-01T08:00:00Z',
-        scoringReviewer: 'Reviewer 1',
+        scoringReviewer: 'Reviewer-1',
       },
       {
         areaScores: [],
-        entityRef: { kind: 'system', name: 'System 1' },
-        id: 'system:default/system 1',
+        entityRef: { kind: 'system', name: 'System-1' },
+        id: 'system:default/system-1',
         owner: { kind: 'group', name: 'team2', namespace: 'default' },
         reviewDate: new Date('2022-01-01T08:00:00.000Z'),
-        reviewer: { kind: 'User', name: 'Reviewer 2', namespace: 'default' },
+        reviewer: { kind: 'User', name: 'Reviewer-2', namespace: 'default' },
         scorePercent: 80,
         scoringReviewDate: '2022-01-01T08:00:00Z',
-        scoringReviewer: 'Reviewer 2',
+        scoringReviewer: 'Reviewer-2',
       },
     ];
 
@@ -239,25 +239,25 @@ describe('ScoringDataJsonClient-getAllScores', () => {
     const expected = [
       {
         areaScores: [],
-        entityRef: { kind: 'api', name: 'Api 1' },
-        id: 'api:default/api 1',
+        entityRef: { kind: 'api', name: 'Api-1' },
+        id: 'api:default/api-1',
         owner: { kind: 'group', name: 'team1', namespace: 'default' },
         reviewDate: new Date('2022-01-01T08:00:00.000Z'),
-        reviewer: { kind: 'User', name: 'Reviewer 1', namespace: 'default' },
+        reviewer: { kind: 'User', name: 'Reviewer-1', namespace: 'default' },
         scorePercent: 75,
         scoringReviewDate: '2022-01-01T08:00:00Z',
-        scoringReviewer: 'Reviewer 1',
+        scoringReviewer: 'Reviewer-1',
       },
       {
         areaScores: [],
-        entityRef: { kind: 'system', name: 'System 1' },
-        id: 'system:default/system 1',
+        entityRef: { kind: 'system', name: 'System-1' },
+        id: 'system:default/system-1',
         owner: { kind: 'group', name: 'team2', namespace: 'default' },
         reviewDate: new Date('2022-01-01T08:00:00.000Z'),
-        reviewer: { kind: 'User', name: 'Reviewer 2', namespace: 'default' },
+        reviewer: { kind: 'User', name: 'Reviewer-2', namespace: 'default' },
         scorePercent: 80,
         scoringReviewDate: '2022-01-01T08:00:00Z',
-        scoringReviewer: 'Reviewer 2',
+        scoringReviewer: 'Reviewer-2',
       },
     ];
 
@@ -289,14 +289,14 @@ describe('ScoringDataJsonClient-getAllScores', () => {
     const expected = [
       {
         areaScores: [],
-        entityRef: { kind: 'api', name: 'Api 1' },
-        id: 'api:default/api 1',
+        entityRef: { kind: 'api', name: 'Api-1' },
+        id: 'api:default/api-1',
         owner: { kind: 'group', name: 'team1', namespace: 'default' },
         reviewDate: new Date('2022-01-01T08:00:00.000Z'),
-        reviewer: { kind: 'User', name: 'Reviewer 1', namespace: 'default' },
+        reviewer: { kind: 'User', name: 'Reviewer-1', namespace: 'default' },
         scorePercent: 75,
         scoringReviewDate: '2022-01-01T08:00:00Z',
-        scoringReviewer: 'Reviewer 1',
+        scoringReviewer: 'Reviewer-1',
       },
     ];
 
@@ -346,7 +346,7 @@ describe('ScoringDataJsonClient-getAllScores', () => {
         },
         scorePercent: 75,
         scoringReviewDate: '2022-01-01T08:00:00Z',
-        scoringReviewer: 'CustomReviewier 1',
+        scoringReviewer: 'CustomReviewer-1',
         areaScores: [],
       };
 
@@ -372,12 +372,12 @@ describe('ScoringDataJsonClient-getAllScores', () => {
         reviewDate: new Date('2022-01-01T08:00:00.000Z'),
         reviewer: {
           kind: 'User',
-          name: 'CustomReviewier 1',
+          name: 'CustomReviewer-1',
           namespace: 'default',
         },
         scorePercent: 75,
         scoringReviewDate: '2022-01-01T08:00:00Z',
-        scoringReviewer: 'CustomReviewier 1',
+        scoringReviewer: 'CustomReviewer-1',
       };
       const api = new ScoringDataJsonClient({
         configApi: mockConfig,
