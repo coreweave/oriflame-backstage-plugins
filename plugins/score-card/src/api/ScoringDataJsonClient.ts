@@ -164,7 +164,7 @@ export class ScoringDataJsonClient implements ScoringDataApi {
         fields: ['kind', 'metadata.name', 'spec.owner', 'relations'],
       });
       entities = response.items.filter(
-        (entity): entity is Entity => Boolean(entity),
+        (localEntity): localEntity is Entity => Boolean(localEntity),
       );
     }
 
