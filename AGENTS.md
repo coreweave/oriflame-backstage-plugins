@@ -83,6 +83,17 @@ Renovate-generated PRs get changesets auto-added by `renovate-changesets.yml`.
 - This fork's `main` is the default base; upstream is Oriflame's repo but we
   release independently under `@coreweave`.
 
+## Commit signing
+
+Commits in this repo are GPG-signed. If a commit fails with
+`gpg failed to sign the data` / `failed to write commit object`, the GPG
+agent is locked or the key is unavailable. Retry the same commit **without**
+the signature (`git commit --no-gpg-sign …` or with `commit.gpgsign=false`
+just for that command), keep working, and at the end of the session remind
+the user to re-sign the unsigned commits (e.g.
+`git rebase --exec 'git commit --amend --no-edit -S' <base>`).
+Do not skip hooks, only the signature.
+
 ## Gotchas
 
 - `pull_request_target` is used in CI so forks can run the build; don't add
