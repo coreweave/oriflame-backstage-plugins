@@ -43,6 +43,16 @@ Reference fixtures: [`sample-data/all.json`](./sample-data/all.json) (board) and
 When changing types, parsing, or rendering, keep the following invariants in
 mind — they are all easy to break unintentionally:
 
+- **The hierarchy is fixed at 3 levels — areas do not nest.**
+  `EntityScore → areaScores[] → scoreEntries[]`, full stop.
+  `EntityScoreArea` has no `areaScores` of its own and `EntityScoreEntry` is
+  a leaf. The renderers (`ScoreCardTable`, `getScoreTableEntries`,
+  `areaColumn`) only walk those two levels — adding nested fields to the
+  types without touching the column-per-area table layout produces JSON that
+  silently doesn't render. Producers needing sub-grouping must flatten with
+  title prefixes (e.g. `L1: …`, `L2: …` entry titles inside one area).
+  Don't accept "let's just nest areas" as a quick fix — it's a type change
+  *and* a renderer rewrite.
 - **Two URL shapes off one base.** `ScoringDataJsonClient.getAllScores` fetches
   `<jsonDataUrl>all.json` and expects an array; `getScore(entity)` fetches
   `<jsonDataUrl><namespace>/<kind>/<name>.json` (lower-cased, `namespace`

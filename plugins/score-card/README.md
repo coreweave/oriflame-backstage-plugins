@@ -99,6 +99,36 @@ the score JSON know what to emit. A concrete reference is in
 [`sample-data/`](./sample-data/) — `all.json` is the aggregate file and
 `default/{kind}/{name}.json` are the per-entity files.
 
+#### Hierarchy depth (no nesting)
+
+The score document has a **fixed three-level hierarchy** and **areas do not
+nest**:
+
+```
+EntityScore
+└── areaScores: EntityScoreArea[]
+    └── scoreEntries: EntityScoreEntry[]   ← leaves
+```
+
+`EntityScoreArea` has no `areaScores` field of its own and `EntityScoreEntry`
+has no children, so producers cannot express sub-categories within an area
+through the schema. This is enforced by the types and by the renderers
+(`ScoreCardTable`, `getScoreTableEntries`, `areaColumn`), which only ever
+walk `areaScores → scoreEntries`. If a producer needs grouping below the
+area level, the established workarounds are:
+
+1. **Flatten with title prefixes.** Keep a single `EntityScoreArea` and
+   prefix entry titles (e.g. `L1: Status`, `L2: RTO Target`, …) so the
+   sub-grouping stays visible in the flat row list.
+2. **Promote sub-areas to top-level areas.** Emit two sibling
+   `EntityScoreArea`s like `Security – Network` and `Security – Secrets`.
+   The board renders one column per area, so this gets visually noisy past
+   ~6–8 areas.
+
+True nested grouping would require both a type change and a renderer rewrite
+(the table layout is column-per-area); don't add a workaround that depends on
+fields the renderer ignores.
+
 #### File layout under `jsonDataUrl`
 
 The JSON client resolves URLs in two ways:
