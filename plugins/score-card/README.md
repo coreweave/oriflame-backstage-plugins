@@ -91,6 +91,99 @@ metadata:
 
 **Important note**: The `results.json` file in the example above is inside a github repository. If you use private github repos you need to configure github authentication in your backstage instance. The users authentication token will then be used to retrieve the file automatically. You can use any other http location as well, but no authentication will be brokered for those.
 
+### JSON data format
+
+The authoritative TypeScript types live in [`src/api/types.ts`](./src/api/types.ts); this section
+describes the shape the plugin actually fetches and renders, so producers of
+the score JSON know what to emit. A concrete reference is in
+[`sample-data/`](./sample-data/) — `all.json` is the aggregate file and
+`default/{kind}/{name}.json` are the per-entity files.
+
+#### File layout under `jsonDataUrl`
+
+The JSON client resolves URLs in two ways:
+
+| View                                  | URL                                                    | Body shape       |
+| ------------------------------------- | ------------------------------------------------------ | ---------------- |
+| Score board / table (all entities)    | `<jsonDataUrl>all.json`                                | `EntityScore[]`  |
+| Single entity (`ScoreCard` / detail)  | `<jsonDataUrl><namespace>/<kind>/<name>.json`          | `EntityScore`    |
+
+The per-entity URL is **lower-cased** before the request (
+`namespace`/`kind`/`name` are folded to lowercase, including the trailing
+`.json`), and `namespace` falls back to `default` when the catalog entity has
+no namespace. A `404` is treated as "no score data for this entity" and the
+component renders empty rather than erroring.
+
+When an entity carries the `scorecard/jsonDataUrl` annotation, that URL wins
+over the conventional path — the value is fetched verbatim, so it must point
+at the correct shape (an array for table views, a single object for the
+detail view).
+
+#### `EntityScore` (top-level object, also each item in `all.json`)
+
+| Field                  | Type                                                                                                       | Required | Notes                                                                                                                                          |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entityRef`            | `{ kind: string; name: string; namespace?: string }`                                                       | yes      | `name` must match a Backstage catalog entity's `metadata.name`; that's how scores are joined back to entities (and to their owner relations).  |
+| `generatedDateTimeUtc` | `string \| Date`                                                                                           | optional | ISO 8601 or any string `new Date(...)` accepts. Used for display only.                                                                         |
+| `scorePercent`         | `number`                                                                                                   | yes      | 0–100. Drives the headline figure and color band.                                                                                              |
+| `scoreLabel`           | `string`                                                                                                   | optional | Free-form display label (e.g. `"A"`, `"Yellow"`). When set it replaces `scorePercent` in the rendered chip.                                    |
+| `scoreSuccess`         | `"success" \| "almost-success" \| "partial" \| "almost-failure" \| "failure"`                              | yes      | Controls the color band — see table below. Any other value (including `"unknown"`) renders as neutral grey.                                    |
+| `scoringReviewer`      | `string \| { kind, name, namespace? }`                                                                     | optional | Plain string is treated as a `User` in `default` namespace; a compound ref is used as-is. Hidden unless `scorecards.display.reviewer` is set.  |
+| `scoringReviewDate`    | `string \| Date`                                                                                           | optional | Hidden unless `scorecards.display.reviewDate` is set.                                                                                          |
+| `areaScores`           | `EntityScoreArea[]`                                                                                        | optional | Omit for "headline only" rows in `all.json`; required for the detail view.                                                                     |
+
+#### `EntityScoreArea` (one per top-level scoring area, e.g. Code, Security)
+
+| Field          | Type                  | Required | Notes                                                                                                       |
+| -------------- | --------------------- | -------- | ----------------------------------------------------------------------------------------------------------- |
+| `id`           | `number`              | optional | Stable id for deep-links; appears in `wikiLinkTemplate` substitutions as `{id}`.                            |
+| `title`        | `string`              | yes      | Column header in the table and section heading in the detail view.                                          |
+| `scorePercent` | `number`              | yes      | 0–100 for the area.                                                                                         |
+| `scoreLabel`   | `string`              | optional | Same role as on `EntityScore`.                                                                              |
+| `scoreSuccess` | `ScoreSuccessEnum`    | yes      | Color band for the area cell.                                                                               |
+| `scoreEntries` | `EntityScoreEntry[]`  | optional | Required for the drill-down detail view; safe to omit in `all.json` rows that only need the area headline.  |
+
+#### `EntityScoreEntry` (one per individual check inside an area)
+
+| Field          | Type                  | Required | Notes                                                                                                                                            |
+| -------------- | --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`           | `number`              | yes      | Used for `wikiLinkTemplate` substitution and as a stable React key.                                                                              |
+| `title`        | `string`              | yes      | Row title.                                                                                                                                       |
+| `isOptional`   | `boolean`             | optional | Optional checks render with a different style and don't drag the area score down when unscored.                                                  |
+| `scorePercent` | `number`              | optional | Omit for "not yet scored" entries — pair with `scoreSuccess: "unknown"` for the neutral-grey row.                                                |
+| `scoreLabel`   | `string`              | optional | Same role as above.                                                                                                                              |
+| `scoreSuccess` | `ScoreSuccessEnum`    | yes      | Color band.                                                                                                                                      |
+| `scoreHints`   | `string \| string[]`  | optional | Short summary line(s) shown next to the check (e.g. which sub-criteria were met).                                                                |
+| `details`      | `string`              | yes      | Long-form reasoning. **Markdown is rendered**, so links and emphasis work. Use `"..."` for "to be filled".                                       |
+
+#### `scoreSuccess` color bands
+
+| Value             | Color                                  |
+| ----------------- | -------------------------------------- |
+| `success`         | green (`rgb(114, 175, 80)`)            |
+| `almost-success`  | light green (`rgb(172, 191, 140)`)     |
+| `partial`         | yellow (`rgb(226, 232, 179)`)          |
+| `almost-failure`  | orange (`rgb(255, 192, 85)`)           |
+| `failure`         | red (`rgb(235, 111, 53)`)              |
+| anything else     | neutral grey (use `"unknown"` for this)|
+
+#### Producer tips
+
+- `all.json` rows do not need `areaScores[].scoreEntries`; emit the headline
+  area scores there and put full check-level detail in the per-entity file.
+  This keeps the board response small.
+- The plugin matches scores to catalog entities by `entityRef.name`, so the
+  name in the JSON must match the catalog `metadata.name` exactly
+  (case-insensitive on the URL path, but exact on the field).
+- `details` supports Markdown — keep one fact per paragraph and prefer
+  reference-style links if you reuse the same target across many entries.
+- For private GitHub-hosted JSON, configure a Backstage GitHub integration;
+  the client routes through `getGithubFileFetchUrl` and attaches the
+  authenticated user's token automatically.
+- `wikiLinkTemplate` does plain `{field}` substitution against
+  `EntityScoreEntry`, so any field above (e.g. `{id}`, `{title}`) is
+  available; keep ids stable across regenerations of the data.
+
 ### Configuration
 
 All configuration options:

@@ -8,7 +8,9 @@ demo Backstage app used for local dev and end-to-end tests.
 
 - `plugins/` — published plugins (currently just `score-card`, published as
   `@coreweave/backstage-plugin-score-card`). New plugins go here. See
-  `plugins/score-card/AGENTS.md` for plugin-local guidance.
+  `plugins/score-card/AGENTS.md` for plugin-local guidance, including the
+  shape of the JSON files the score-card plugin consumes (also documented
+  for end users in `plugins/score-card/README.md` § "JSON data format").
 - `packages/app` — private demo Backstage frontend used for `yarn dev` and as
   the host for Playwright e2e tests in `packages/app/e2e-tests/`.
 - `packages/backend` — private demo Backstage backend that pairs with `app`.
