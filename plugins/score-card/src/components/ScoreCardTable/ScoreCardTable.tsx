@@ -279,6 +279,15 @@ export const ScoreCardTable = ({
     return Array.from(opts);
   }, [selectedKind]);
 
+  let body: React.ReactNode;
+  if (loading) {
+    body = <Progress />;
+  } else if (error) {
+    body = getWarningPanel(error);
+  } else {
+    body = <ScoreTable title={title} scores={data || []} />;
+  }
+
   return (
     <>
       <FormControl
@@ -300,13 +309,7 @@ export const ScoreCardTable = ({
           ))}
         </Select>
       </FormControl>
-      {loading ? (
-        <Progress />
-      ) : error ? (
-        getWarningPanel(error)
-      ) : (
-        <ScoreTable title={title} scores={data || []} />
-      )}
+      {body}
     </>
   );
 };
