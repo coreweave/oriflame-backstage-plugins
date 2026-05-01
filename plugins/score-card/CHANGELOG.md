@@ -1,4 +1,4 @@
-# @oriflame/backstage-plugin-score-card
+# @coreweave/backstage-plugin-score-card
 
 ## 0.9.0
 

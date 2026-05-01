@@ -1,5 +1,5 @@
 {
-  "name": "ori-backstage-plugins",
+  "name": "coreweave-backstage-plugins",
   "description": "Oriflame plugins for Backstage.",
   "maintainers": [
     "jvilimek@users.noreply.github.com",
@@ -26,7 +26,7 @@
     "lint": "backstage-cli repo lint --since origin/main",
     "lint:all": "backstage-cli repo lint",
     "lint:type-deps": "backstage-repo-tools type-deps",
-    "new": "backstage-cli new --scope ori --baseVersion 0.0.0 --no-private",
+    "new": "backstage-cli new --scope coreweave --baseVersion 0.0.0 --no-private",
     "create-plugin": "echo \"use 'yarn new' instead\"",
     "release": "node scripts/prepare-release.js && changeset version && yarn prettier --write '{packages,plugins}/*/{package.json,CHANGELOG.md}' '.changeset/*.json' && yarn install --no-immutable",
     "prettier:check": "prettier --check .",
