@@ -13,12 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Table, TableColumn, Progress, Link } from '@backstage/core-components';
 import useAsync from 'react-use/lib/useAsync';
 import { errorApiRef, useApi } from '@backstage/core-plugin-api';
 import { scoreToColorConverter } from '../../helpers/scoreToColorConverter';
-import { Chip } from '@material-ui/core';
+import {
+  Chip,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+} from '@material-ui/core';
 import { getWarningPanel } from '../../helpers/getWarningPanel';
 import { scoringDataApiRef } from '../../api';
 import { EntityScoreExtended } from '../../api/types';
@@ -26,6 +32,16 @@ import { EntityRefLink } from '@backstage/plugin-catalog-react';
 import { DEFAULT_NAMESPACE, Entity } from '@backstage/catalog-model';
 import { useDisplayConfig } from '../../config/DisplayConfig';
 import { DisplayPolicy } from '../../config/types';
+
+const ENTITY_KIND_OPTIONS = [
+  'Component',
+  'System',
+  'API',
+  'Resource',
+  'Domain',
+] as const;
+const ALL_KINDS = '__all__';
+const DEFAULT_KIND = 'System';
 
 const useScoringAllDataLoader = (
   entityKindFilter?: string[],
@@ -36,7 +52,7 @@ const useScoringAllDataLoader = (
 
   const { error, value, loading } = useAsync(
     async () => scorigDataApi.getAllScores(entityKindFilter, entity),
-    [scorigDataApi],
+    [scorigDataApi, entityKindFilter, entity],
   );
 
   useEffect(() => {
@@ -243,17 +259,57 @@ export const ScoreCardTable = ({
   entityKindFilter,
   entity,
 }: ScoreCardTableProps) => {
+  const initialKind = entityKindFilter?.[0] ?? DEFAULT_KIND;
+  const [selectedKind, setSelectedKind] = useState<string>(initialKind);
+
+  const effectiveFilter = useMemo(
+    () => (selectedKind === ALL_KINDS ? undefined : [selectedKind]),
+    [selectedKind],
+  );
+
   const {
     loading,
     error,
     value: data,
-  } = useScoringAllDataLoader(entityKindFilter, entity);
+  } = useScoringAllDataLoader(effectiveFilter, entity);
 
+  const dropdownOptions = useMemo(() => {
+    const opts = new Set<string>(ENTITY_KIND_OPTIONS);
+    if (selectedKind !== ALL_KINDS) opts.add(selectedKind);
+    return Array.from(opts);
+  }, [selectedKind]);
+
+  let body: React.ReactNode;
   if (loading) {
-    return <Progress />;
+    body = <Progress />;
   } else if (error) {
-    return getWarningPanel(error);
+    body = getWarningPanel(error);
+  } else {
+    body = <ScoreTable title={title} scores={data || []} />;
   }
 
-  return <ScoreTable title={title} scores={data || []} />;
+  return (
+    <>
+      <FormControl
+        data-testid="score-board-kind-filter"
+        style={{ marginBottom: 16, minWidth: 180 }}
+      >
+        <InputLabel id="score-board-kind-filter-label">Entity kind</InputLabel>
+        <Select
+          labelId="score-board-kind-filter-label"
+          value={selectedKind}
+          onChange={e => setSelectedKind(e.target.value as string)}
+          inputProps={{ 'data-testid': 'score-board-kind-filter-select' }}
+        >
+          <MenuItem value={ALL_KINDS}>All</MenuItem>
+          {dropdownOptions.map(kind => (
+            <MenuItem key={kind} value={kind}>
+              {kind}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      {body}
+    </>
+  );
 };
