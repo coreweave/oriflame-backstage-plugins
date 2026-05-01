@@ -4,6 +4,26 @@ CoreWeave fork of the Oriflame Backstage plugins. A Yarn workspaces monorepo
 that publishes plugin packages to npm under the `@coreweave` scope and ships a
 demo Backstage app used for local dev and end-to-end tests.
 
+## This is a PUBLIC repository
+
+This repo is published at `github.com/coreweave/oriflame-backstage-plugins`
+with `PUBLIC` visibility, and the plugins under `plugins/` ship to the public
+npm registry. **Nothing CoreWeave-internal may be added** — not in code,
+docs, comments, fixtures, commit messages, PR descriptions, or changesets.
+That includes:
+
+- Internal hostnames, URLs, IPs, dashboards, or runbooks.
+- References to internal-only repos (e.g. anything under `coreweave/` on
+  GitHub with `INTERNAL` or `PRIVATE` visibility), internal Slack channels,
+  Jira/Linear projects, PagerDuty services, or oncall rotations.
+- Customer names, account IDs, cluster names, or any operational data.
+- Employee names beyond what's already attributed via public git history.
+- Secrets, tokens, credentials, or paths into internal infra.
+
+Before committing, scan the diff for these. If you need to reference an
+internal concept to explain something here, generalize it (describe the
+shape, not the system). When in doubt, keep it out.
+
 ## Layout
 
 - `plugins/` — published plugins (currently just `score-card`, published as
