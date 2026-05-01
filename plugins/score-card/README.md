@@ -228,13 +228,13 @@ All configuration options:
 
    ```bash
    # From your Backstage root directory
-   yarn add --cwd packages/app @oriflame/backstage-plugin-score-card
+   yarn add --cwd packages/app @coreweave/backstage-plugin-score-card
    ```
 
 2. Add Score board to `packages/app/src/App.tsx`:
 
    ```diff
-   +import { ScoreBoardPage } from '@oriflame/backstage-plugin-score-card';
+   +import { ScoreBoardPage } from '@coreweave/backstage-plugin-score-card';
 
    const routes = (
      <FlatRoutes>
@@ -268,7 +268,7 @@ All configuration options:
 4. Add Score Card to `packages/app/src/components/catalog/EntityPage.tsx`:
 
    ```diff
-   +import { EntityScoreCardContent } from '@oriflame/backstage-plugin-score-card';
+   +import { EntityScoreCardContent } from '@coreweave/backstage-plugin-score-card';
 
    const systemPage = (
       <EntityLayoutWrapper>
@@ -293,7 +293,7 @@ All configuration options:
 Add EntityScoreCardTable to `packages/app/src/components/catalog/EntityPage.tsx` if you would like to view multiple component scores in tabular format:
 
 ```diff
-+import { EntityScoreCardTable } from '@oriflame/backstage-plugin-score-card';
++import { EntityScoreCardTable } from '@coreweave/backstage-plugin-score-card';
 
 const systemPage = (
    <EntityLayoutWrapper>

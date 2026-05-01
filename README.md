@@ -12,7 +12,7 @@ List of prerequisites are [same as for the backstage](https://backstage.io/docs/
 
 Name | Version | Description
 ---------|----------|----------
- [score-card](https://github.com/Oriflame/backstage-plugins/blob/main/plugins/score-card/README.md) | [![npm version](https://badge.fury.io/js/@oriflame%2Fbackstage-plugin-score-card.svg)](https://badge.fury.io/js/@oriflame%2Fbackstage-plugin-score-card) | Main idea behind it comes from a need to somehow visualize maturity of our services and to establish a process how to improve it (discuss with the teams what to focus on next).
+ [score-card](https://github.com/coreweave/oriflame-backstage-plugins/blob/main/plugins/score-card/README.md) | [![npm version](https://badge.fury.io/js/@coreweave%2Fbackstage-plugin-score-card.svg)](https://badge.fury.io/js/@coreweave%2Fbackstage-plugin-score-card) | Main idea behind it comes from a need to somehow visualize maturity of our services and to establish a process how to improve it (discuss with the teams what to focus on next).
 
 ## Workflows
 

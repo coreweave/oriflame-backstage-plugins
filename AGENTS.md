@@ -68,7 +68,7 @@ shape, not the system). When in doubt, keep it out.
 - `yarn fix` — `backstage-cli repo fix` (auto-fix lint/format).
 - `yarn lint:type-deps` — verifies declared `dependencies` vs. actual usage;
   CI fails if out of sync.
-- `yarn new` — scaffold a new plugin under the `@ori` scope at version `0.0.0`.
+- `yarn new` — scaffold a new plugin under the `@coreweave` scope at version `0.0.0`.
 
 ## Conventions
 
