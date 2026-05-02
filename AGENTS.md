@@ -37,10 +37,10 @@ shape, not the system). When in doubt, keep it out.
 - `packages/entities` — sample catalog entities and templates wired into the
   demo app; `test-entity.yaml` is the entity used by e2e tests.
 - `.changeset/` — pending changesets that drive version bumps and changelogs.
-- `.github/workflows/` — CI, release-prepare, release-publish, and Renovate
-  changeset automation.
-- `scripts/` — release helpers and the Apache-2.0 copyright header template
-  enforced on every source file.
+- `.github/workflows/` — CI, release (single workflow built on
+  `changesets/action`), and Renovate changeset automation.
+- `scripts/` — the Apache-2.0 copyright header template enforced on every
+  source file, plus a type-dependency lint helper.
 
 ## Toolchain
 
@@ -81,18 +81,28 @@ shape, not the system). When in doubt, keep it out.
 
 ## Releases (changesets)
 
+A single `.github/workflows/release.yml` (built on `changesets/action`)
+handles both phases:
+
 1. Make changes in a branch.
 2. Run `yarn changeset`, pick affected published packages, choose `patch` /
    `minor` / `major`, write a short user-facing note, commit the generated
    `.changeset/*.md`.
 3. Open a PR. CI (`.github/workflows/ci.yml`) runs config check, lint,
    `tsc:full`, build, type-deps check, Jest, and Playwright.
-4. On merge to `main`, `release-prepare.yml` opens a "Release new version(s)"
-   PR that bumps versions and updates `CHANGELOG.md`.
-5. Merging that PR triggers `release-publish.yml`, which tags, creates a
-   GitHub release, and publishes changed plugins to npm.
+4. On merge to `main`, `release.yml` opens or updates a "Release new
+   version(s)" PR that bumps versions and updates `CHANGELOG.md`.
+5. Merging that PR triggers `release.yml` again, which now sees no pending
+   changesets and bumped versions — it builds, publishes the changed
+   packages to npm under `@coreweave`, and creates a GitHub release per
+   package.
 
-Renovate-generated PRs get changesets auto-added by `renovate-changesets.yml`.
+Renovate-generated PRs get changesets auto-added by `renovate-changesets.yml`,
+so dependency bumps flow through the same release path.
+
+Releasing requires an `NPM_TOKEN` repo secret with publish access to the
+`@coreweave` scope. See `CONTRIBUTING.md` § Releasing for setup details and
+the manual-release fallback.
 
 ## Pull requests
 
