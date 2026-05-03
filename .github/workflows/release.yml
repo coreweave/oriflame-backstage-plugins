@@ -1,6 +1,8 @@
 name: Release
 
 on:
+  release:
+    types: [created]
   push:
     branches: [main]
   workflow_dispatch:
@@ -12,6 +14,7 @@ concurrency:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write  # Required for OIDC: configured at https://www.npmjs.com/package/@coreweave/backstage-plugin-score-card/access
 
 jobs:
   release:
@@ -26,15 +29,17 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: https://registry.npmjs.org/
+	  scope: '@coreweave'
+	  # always-auth: true  # Generally not needed with OIDC, setup-node handles it
 
       - name: Install dependencies
         uses: backstage/actions/yarn-install@v0.6.11
@@ -46,20 +51,19 @@ jobs:
           yarn tsc:full
           yarn backstage-cli repo build
 
-      - name: Configure Yarn npm auth
-        run: yarn config set -H 'npmAuthToken' "$NPM_TOKEN"
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+     #- name: Configure Yarn npm auth
+     #  run: yarn config set -H 'npmAuthToken' "$NPM_TOKEN"
+     #  env:
+     #    NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create release PR or publish to npm
         uses: changesets/action@v1
         with:
           version: yarn release
-          publish: yarn workspaces foreach --all --no-private --verbose npm publish --access public --tolerate-republish
+          publish: yarn workspaces foreach --all --no-private --verbose npm publish --access public --tolerate-republish --provenance
           title: 'Release new version(s)'
           commit: 'chore: release packages'
           createGithubReleases: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # For github release
+          #NPM_TOKEN: ${{ secrets.NPM_TOKEN }}  # Not needed with OIDC
