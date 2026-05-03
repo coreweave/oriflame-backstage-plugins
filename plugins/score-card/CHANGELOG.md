@@ -1,5 +1,11 @@
 # @coreweave/backstage-plugin-score-card
 
+## 0.9.3
+
+### Patch Changes
+
+- 5356cc4: Rebrand for the CoreWeave fork: the Score board's `Maintainer` header label now reads `CoreWeave`, and the sample `jsonDataUrl` snippets in the README point at this fork's `sample-data/` directory instead of the upstream Oriflame repo.
+
 ## 0.9.0
 
 ### Minor Changes
