@@ -41,8 +41,9 @@ test('Score board: displays the score board based on sample data', async ({ page
   await expect(page.getByText('Custom sub title')).toBeVisible();
   // cy.contains('Custom table title').should('be.visible');
   await expect(page.getByRole('heading', { name: 'Custom table title' })).toBeVisible();
-  // cy.get('span:contains("1-4 of 4")').should('be.visible'); // beware, there is also a hidden <P/> element
-  await expect(await page.locator('span').filter({ hasText: '1-4 of' })).toBeVisible();
+  // Score board defaults to filtering by Kind=System; sample data has 3 systems.
+  // beware, there is also a hidden <P/> element
+  await expect(await page.locator('span').filter({ hasText: '1-3 of' })).toBeVisible();
   // cy.contains('audio-playback').should('be.visible');
   await expect(await page.getByRole('link', { name: 'audio-playback' })).toBeVisible();
   // cy.contains('team-c').should('be.visible');
