@@ -21,7 +21,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Configure Git
         run: |
-          git config --global user.email noreply@oriflame.com
+          git config --global user.email 'noreply@coreweave.com'
           git config --global user.name 'Github changeset workflow'
       - name: Generate changeset
         uses: actions/github-script@v6

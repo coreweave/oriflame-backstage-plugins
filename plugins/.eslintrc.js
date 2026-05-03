@@ -25,9 +25,12 @@ module.exports = {
         // eslint-disable-next-line no-restricted-syntax
         templateFile: path.resolve(__dirname, '../scripts/copyright-header.txt'),
         templateVars: {
-          NAME: 'Oriflame',
+          // Default for newly authored files in this fork. Existing
+          // Oriflame-attributed files keep their headers because the
+          // varRegexps below also match them.
+          NAME: 'CoreWeave',
         },
-        varRegexps: { NAME: /(Oriflame)/ },
+        varRegexps: { NAME: /(Oriflame|CoreWeave)/ },
         onNonMatchingHeader: 'replace',
       },
     ],

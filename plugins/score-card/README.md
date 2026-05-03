@@ -64,7 +64,7 @@ The location of the JSON files may be configured in `app-config.yaml' like this:
 
 ```yaml
 scorecards:
-  jsonDataUrl: https://raw.githubusercontent.com/Oriflame/backstage-plugins/main/plugins/score-card/sample-data/
+  jsonDataUrl: https://raw.githubusercontent.com/coreweave/oriflame-backstage-plugins/main/plugins/score-card/sample-data/
 ```
 
 In the above location it expects data in a format see [scoring data](./sample-data).
@@ -86,7 +86,7 @@ The JSON file can also be dynamically passed through the annotations field of `c
 ```yaml
 metadata:
   annotations:
-    scorecard/jsonDataUrl: 'https://github.com/oriflame/backstage-plugins/blob/master/results.json'
+    scorecard/jsonDataUrl: 'https://github.com/coreweave/oriflame-backstage-plugins/blob/main/results.json'
 ```
 
 **Important note**: The `results.json` file in the example above is inside a github repository. If you use private github repos you need to configure github authentication in your backstage instance. The users authentication token will then be used to retrieve the file automatically. You can use any other http location as well, but no authentication will be brokered for those.
@@ -353,7 +353,7 @@ Answers & comments are reviewed together with the team by an architect. Question
 
 ### Backstage integration & visualization
 
-There is an [integration pipeline](tools/azure-devops-pipelines/integration-with-sharepoint.yaml) that runs regularly that integrates the Sharepoint list, git repository with the [scoring data](https://github.com/Oriflame/backstage-plugins/tree/main/plugins/score-card/sample-data) and the storage account that provides JSON scoring data for the Backstage plugin to visualize results.
+There is an [integration pipeline](tools/azure-devops-pipelines/integration-with-sharepoint.yaml) that runs regularly that integrates the Sharepoint list, git repository with the [scoring data](https://github.com/coreweave/oriflame-backstage-plugins/tree/main/plugins/score-card/sample-data) and the storage account that provides JSON scoring data for the Backstage plugin to visualize results.
 
 For more detailed info see [README](tools/azure-devops-pipelines/README.md).
 

@@ -95,5 +95,5 @@ changeset: ## Create a changeset for the current changes.
 	$(YARN) changeset
 
 .PHONY: release
-release: ## Run the release prep script (changeset version + reformat).
+release: ## Apply pending changesets (bump versions + regenerate yarn.lock). CI does this automatically; only run locally for manual releases.
 	$(YARN) release

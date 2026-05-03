@@ -26,9 +26,12 @@ module.exports = {
         // eslint-disable-next-line no-restricted-syntax
         templateFile: path.resolve(__dirname, '../scripts/copyright-header.txt'),
         templateVars: {
-          NAME: 'Oriflame (Based on https://github.com/RoadieHQ/roadie-backstage-plugins source copyrighted by Larder Software Limited)',
+          // Default for newly authored files in this fork. Existing
+          // Roadie/Larder-derived files keep their longer attribution
+          // because the varRegexps below also match it.
+          NAME: 'CoreWeave',
         },
-        varRegexps: { NAME: /(Oriflame \([^\)]+\))/ },
+        varRegexps: { NAME: /(Oriflame \([^)]+\)|CoreWeave)/ },
         onNonMatchingHeader: 'replace',
       },
     ],

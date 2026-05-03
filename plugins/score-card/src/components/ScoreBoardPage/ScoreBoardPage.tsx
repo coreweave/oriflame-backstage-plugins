@@ -43,7 +43,7 @@ export const ScoreBoardPage = ({
       title={title ?? 'Score board'}
       subtitle={subTitle ?? 'Overview of entity scores'}
     >
-      <HeaderLabel label="Maintainer" value="Oriflame" />
+      <HeaderLabel label="Maintainer" value="CoreWeave" />
       <HeaderLabel label="Status" value="Alpha" />
     </Header>
     <Content>

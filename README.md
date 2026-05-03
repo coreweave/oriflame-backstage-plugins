@@ -1,68 +1,64 @@
-# backstage-plugins
+# oriflame-backstage-plugins
 
-Oriflame Backstage plugins.
+CoreWeave fork of the [Oriflame Backstage plugins](https://github.com/Oriflame/backstage-plugins). Plugins under `plugins/` are published to npm under the `@coreweave` scope; `packages/app` and `packages/backend` are a private demo Backstage instance used for local dev and Playwright e2e tests.
 
 ## Getting started
 
-You may find our plugins in the `./plugins` folder. You may start each plugin in isolated mode (navigate to the plugin folder and run `yarn dev` or `yarn start:dev`, see respective README). You may start also the simple backstage host with the plugins integrated via `yarn dev` (in root folder). You may run `yarn test` to run jest tests. For more information see [CONTRIBUTING.md](./CONTRIBUTING.md).
+Plugins live in `./plugins`. You can run a plugin in isolated mode by navigating to its folder and running `yarn dev` or `yarn start:dev` (see each plugin's README). To run the demo Backstage host with all plugins integrated, run `yarn dev` from the repo root. `yarn test` runs the Jest suite. For more information see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-List of prerequisites are [same as for the backstage](https://backstage.io/docs/getting-started/#prerequisites). Please use Node.js version `20.x`.
+Prerequisites are [the same as for Backstage](https://backstage.io/docs/getting-started/#prerequisites). Please use Node.js `20.x`.
 
 ## List of plugins
 
 Name | Version | Description
 ---------|----------|----------
- [score-card](https://github.com/coreweave/oriflame-backstage-plugins/blob/main/plugins/score-card/README.md) | [![npm version](https://badge.fury.io/js/@coreweave%2Fbackstage-plugin-score-card.svg)](https://badge.fury.io/js/@coreweave%2Fbackstage-plugin-score-card) | Main idea behind it comes from a need to somehow visualize maturity of our services and to establish a process how to improve it (discuss with the teams what to focus on next).
+ [score-card](https://github.com/coreweave/oriflame-backstage-plugins/blob/main/plugins/score-card/README.md) | [![npm version](https://badge.fury.io/js/@coreweave%2Fbackstage-plugin-score-card.svg)](https://badge.fury.io/js/@coreweave%2Fbackstage-plugin-score-card) | Visualizes service-maturity scoring data so teams can discuss what to focus on next.
 
 ## Workflows
 
-We use GitHub actions to check build, unit & end to end test and other validations during pull requests. We use them also to prepare releases and publish npm packages.
+GitHub Actions handle CI, the version-bump PR, and npm publishing. The release flow is the standard [`changesets/action`](https://github.com/changesets/action) pattern: a single `release.yml` opens (or updates) a "Release new version(s)" PR whenever there are unreleased changesets on `main`, and publishes to npm + creates GitHub releases when that PR merges.
 
 In overview:
 
-- create branch, commit changes, run `yarn changeset`, commit and create PR -> [CI workflow](#ci-workflow) will run
-- once merged to `main` (on push) [Prepare release PR workflow](#prepare-release-pr-workflow) -> `Release new version(s)` pull request is created automatically. It shall increase versions of packages and update changelogs in respective plugins and cleanup the `.changeset` folder.
-- once this PR is merged to `main` [Release and publish Workflow](#release-and-publish-workflow) will create a new release on GitHub and also publishes changed plugins.
+- Open a PR with your code changes plus a `yarn changeset` entry. [CI](#ci-workflow) runs lint, type-check, build, tests, and Playwright e2e.
+- On merge to `main`, [Release](#release-workflow) opens (or updates) a `Release new version(s)` PR that bumps versions, regenerates changelogs, and clears `.changeset/`.
+- When that PR merges, the same workflow publishes the bumped packages to npm and creates a GitHub release per package.
+
+Manual publishing is documented in [CONTRIBUTING.md](./CONTRIBUTING.md#manual-release).
 
 ### CI workflow
 
-[![CI pipeline](https://github.com/Oriflame/backstage-plugins/actions/workflows/ci.yml/badge.svg)](https://github.com/Oriflame/backstage-plugins/actions/workflows/ci.yml)
+[![CI pipeline](https://github.com/coreweave/oriflame-backstage-plugins/actions/workflows/ci.yml/badge.svg)](https://github.com/coreweave/oriflame-backstage-plugins/actions/workflows/ci.yml)
 
 Source: `.github/workflows/ci.yml`
 
-Shall be executed during `pull requests` to validate changes and also during push to `main` branch to keep validating the main trunk.
+Runs on `pull_request_target` and on push to `main`: config check, lint, `tsc:full`, build, type-deps verify, Jest, and Playwright e2e.
 
-## Prepare release PR workflow
+### Release workflow
 
-[![Prepare release PR workflow](https://github.com/Oriflame/backstage-plugins/actions/workflows/release-prepare.yml/badge.svg)](https://github.com/Oriflame/backstage-plugins/actions/workflows/release-prepare.yml)
+[![Release](https://github.com/coreweave/oriflame-backstage-plugins/actions/workflows/release.yml/badge.svg)](https://github.com/coreweave/oriflame-backstage-plugins/actions/workflows/release.yml)
 
-Source: `.github/workflows/release-prepare.yml`
+Source: `.github/workflows/release.yml`
 
-Shall be executed on push to `main`. It runs `yarn release` = increase versions of packages and update changelogs in respective plugins and cleanup the `.changeset` folder. It comit the changes in a new branch and prepare a new PR `Release new version(s)`.
+Runs on push to `main`. If there are unreleased changesets, opens or updates a `Release new version(s)` PR. If the previous push was the merge of that PR (no remaining changesets, package versions bumped), publishes the changed packages to npm and creates a GitHub release per package.
 
-### Release and publish Workflow
-
-[![Release and publish Workflow](https://github.com/Oriflame/backstage-plugins/actions/workflows/release-publish.yml/badge.svg)](https://github.com/Oriflame/backstage-plugins/actions/workflows/release-publish.yml)
-
-Source: `.github/workflows/ci.yml`
-
-Shall be executed on push to `main`. In case the package versions are changed (which are by the previous PR) it creates a new release on GitHub and also publishes changed plugins to npm repository.
+Requires the `NPM_TOKEN` repository secret with publish access to `@coreweave/*`.
 
 ### Renovate: Validate configuration
 
-[![Renovate: Validate configuration](https://github.com/Oriflame/backstage-plugins/actions/workflows/renovate-validation.yml/badge.svg)](https://github.com/Oriflame/backstage-plugins/actions/workflows/renovate-validation.yml)
+[![Renovate: Validate configuration](https://github.com/coreweave/oriflame-backstage-plugins/actions/workflows/renovate-validation.yml/badge.svg)](https://github.com/coreweave/oriflame-backstage-plugins/actions/workflows/renovate-validation.yml)
 
-Source: `.github/workflows/renovate-changesets.yml`
+Source: `.github/workflows/renovate-validation.yml`
 
-Shall be executed during `pull requests` when `renovate.json` changes to validate the changes. 
+Runs on PRs that touch `renovate.json` to validate the configuration.
 
 ### Renovate: Generate changeset
 
-[![Renovate: Generate changeset](https://github.com/Oriflame/backstage-plugins/actions/workflows/renovate-changesets.yml/badge.svg)](https://github.com/Oriflame/backstage-plugins/actions/workflows/renovate-changesets.yml)
+[![Renovate: Generate changeset](https://github.com/coreweave/oriflame-backstage-plugins/actions/workflows/renovate-changesets.yml/badge.svg)](https://github.com/coreweave/oriflame-backstage-plugins/actions/workflows/renovate-changesets.yml)
 
 Source: `.github/workflows/renovate-changesets.yml`
 
-Shall be executed during `pull requests`. In case the package versions are changed (and the PR was created by renovate bot) it pushes automatically generated `.changesets` entries.
+Runs on Renovate-bot PRs that bump `yarn.lock`, auto-generating a `.changeset/*.md` so the bumped packages get a patch release.
 
 ## Thank you note
 
