@@ -16,7 +16,10 @@ repos:
       - id: trailing-whitespace
         exclude: '^(yarn\.lock|\.yarn/.*|.*\.snap)$'
       - id: end-of-file-fixer
-        exclude: '^(yarn\.lock|\.yarn/.*|.*\.snap|LICENSE)$'
+        # `copyright-header.txt` is the literal template that
+        # `eslint-plugin-notice` matches against — a trailing newline
+        # there would change what counts as a valid header.
+        exclude: '^(yarn\.lock|\.yarn/.*|.*\.snap|LICENSE|scripts/copyright-header\.txt)$'
       - id: mixed-line-ending
         args: [--fix=lf]
       - id: check-merge-conflict

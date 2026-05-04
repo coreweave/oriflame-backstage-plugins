@@ -70,7 +70,7 @@ $spListItems = Get-PnPListItem -List $listId;
 $spFields = Get-PnPField -List $listId;
 
 #prepare empty definitions per item in sharepoint
-$spListItems | ForEach-Object { 
+$spListItems | ForEach-Object {
     $systemEntityName = $_.FieldValues.Title;
     $sytemLocalPath = "$systemScoreFolder/$systemEntityName.json";
     if (Test-Path -Path $sytemLocalPath) { return; }
@@ -98,7 +98,7 @@ Get-ChildItem -Path $systemScoreFolder -Include "$systemName.json" -Exclude all.
         scoreSuccess              = $systemScore.scoreSuccess;
         areaScores                = @();
     }
-  
+
     $spItem = $spListItems | Where-Object { $_.FieldValues.Title -eq $systemEntityName };
     if ($null -ne $spItem) {
         if ($action -eq 'download') {
@@ -160,7 +160,7 @@ Get-ChildItem -Path $systemScoreFolder -Include "$systemName.json" -Exclude all.
                     } | Out-Null;
                 }
                 else { throw 'not supported' }
-            }        
+            }
             $newscoreEntry.scoreSuccess = Get-Success -scorePercent $newscoreEntry.scorePercent;
             $newArea.scoreEntries += $newscoreEntry;
         }
@@ -195,5 +195,5 @@ Get-ChildItem -Path $systemScoreFolder -Include "$systemName.json" -Exclude all.
 }
 if ($systemName -eq '*') {
     $allJsonPath = Join-Path -Path $systemScoreFolder -ChildPath 'all.json';
-    $allServices | ConvertTo-Json -Depth 20 | Set-Content -Path $allJsonPath -Encoding utf8NoBOM;    
+    $allServices | ConvertTo-Json -Depth 20 | Set-Content -Path $allJsonPath -Encoding utf8NoBOM;
 }

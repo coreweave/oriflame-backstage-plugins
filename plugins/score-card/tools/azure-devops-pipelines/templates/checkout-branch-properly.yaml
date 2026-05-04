@@ -25,4 +25,3 @@ steps:
     showWarnings: true
     pwsh: true
     workingDirectory: '$(Build.SourcesDirectory)'
-  
