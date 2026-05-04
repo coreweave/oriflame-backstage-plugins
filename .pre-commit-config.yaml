@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://json.schemastore.org/pre-commit-config.json
+# See https://pre-commit.com for usage and config reference.
+#
+# Install once per checkout with `make precommit-install` (or
+# `pre-commit install`). After that, hooks run on every `git commit`.
+# Run against the full repo with `make precommit-run` (or
+# `pre-commit run --all-files`).
+
+default_language_version:
+  python: python3
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '^(yarn\.lock|\.yarn/.*|.*\.snap)$'
+      - id: end-of-file-fixer
+        exclude: '^(yarn\.lock|\.yarn/.*|.*\.snap|LICENSE)$'
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: check-json
+        # .vscode JSON files allow comments (jsonc); skip them.
+        exclude: '^\.vscode/'
+      - id: detect-private-key
+
+  # Lint GitHub Actions workflows. Catches schema errors (e.g. tabs in
+  # indentation, unknown keys), shellcheck issues in `run:` blocks, and
+  # broken expression syntax.
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.7
+    hooks:
+      - id: actionlint
+
+  # Generic YAML linting. The repo-level .yamllint.yaml keeps this
+  # permissive enough for Backstage-style entity templates and
+  # GitHub workflow expressions.
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [--strict]
+
+  # Format code with the project's pinned Prettier (yarn berry resolves
+  # the version from package.json — no duplicate pinning here).
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier (yarn-pinned)
+        language: system
+        entry: yarn --silent prettier --write --ignore-unknown
+        types_or:
+          - javascript
+          - jsx
+          - ts
+          - tsx
+          - json
+          - yaml
+          - markdown
+          - css
+        # Honour .prettierignore.
+        exclude: '^(yarn\.lock|\.yarn/|dist-types/|e2e-test-report/|.*\.snap$)'

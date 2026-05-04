@@ -94,6 +94,18 @@ new: ## Scaffold a new plugin under the @ori scope.
 changeset: ## Create a changeset for the current changes.
 	$(YARN) changeset
 
+.PHONY: precommit-install
+precommit-install: ## Install the pre-commit git hook in this checkout (one-time per clone).
+	pre-commit install
+
+.PHONY: precommit-run
+precommit-run: ## Run all pre-commit hooks against every tracked file.
+	pre-commit run --all-files
+
+.PHONY: precommit-update
+precommit-update: ## Bump pinned hook versions in .pre-commit-config.yaml.
+	pre-commit autoupdate
+
 .PHONY: release
 release: ## Apply pending changesets (bump versions + regenerate yarn.lock). CI does this automatically; only run locally for manual releases.
 	$(YARN) release

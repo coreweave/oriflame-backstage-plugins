@@ -48,6 +48,29 @@ Set the signing identity on the GitHub-noreply email associated with your accoun
 
 We use the `backstage-cli` to build, serve, lint, test and package all plugins. The [Backstage coding guidelines](https://github.com/backstage/backstage/blob/master/CONTRIBUTING.md#coding-guidelines) apply.
 
+## Pre-commit hooks
+
+The repo ships a [`pre-commit`](https://pre-commit.com) config (`.pre-commit-config.yaml`) that runs:
+
+- generic file hygiene (trailing whitespace, EOF newline, merge-conflict markers, large-file guard, JSON parse, private-key detection);
+- [`actionlint`](https://github.com/rhysd/actionlint) on every file in `.github/workflows/` (catches schema errors, indentation tabs, broken `${{ ... }}` expressions, and shellcheck issues in `run:` blocks);
+- [`yamllint`](https://yamllint.readthedocs.io) (configured by `.yamllint.yaml`) on remaining YAML;
+- the project-pinned Prettier on staged source / config files.
+
+Install once per clone:
+
+```bash
+make precommit-install   # or: pre-commit install
+```
+
+Run against the whole repo (CI parity):
+
+```bash
+make precommit-run       # or: pre-commit run --all-files
+```
+
+Hooks run automatically on `git commit` after install. They never bypass the GPG signing step — see [§ Commits signing](#commits-signing).
+
 ## Creating Changesets
 
 We use [changesets](https://github.com/changesets/changesets) to drive releases. Include a changeset with any pull request that touches a published package — this is what produces the version bump and the `CHANGELOG.md` entry.

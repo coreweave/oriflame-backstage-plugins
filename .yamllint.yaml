@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://json.schemastore.org/yamllint.json
+#
+# Permissive yamllint config tuned for this repo:
+# - GitHub workflow files use long `${{ ... }}` expressions and
+#   provider-supplied descriptions, so line-length is uncapped.
+# - Backstage entity templates can have many parameter blocks; we
+#   intentionally don't enforce document-start markers across the repo.
+
+extends: default
+
+rules:
+  # Workflow files routinely exceed any sensible cap (e.g. action
+  # description URLs); rely on humans + actionlint instead.
+  line-length: disable
+
+  # `---` is optional. Most files in this repo omit it.
+  document-start: disable
+
+  # `#- name: ...` (commented-out workflow steps) and other tightly
+  # packed comments are intentional — don't require a space after `#`.
+  comments:
+    require-starting-space: false
+    min-spaces-from-content: 1
+
+  # Block-comment headers and outdented notes ("# Comment" above an
+  # indented item) read fine; don't enforce alignment with content.
+  comments-indentation: disable
+
+  # The default `truthy` rule rejects bare `on:` keys in GitHub
+  # workflows (since YAML 1.1 reads them as boolean true).
+  truthy:
+    check-keys: false
+
+  # Default indentation is 2 spaces; keep that, but allow indented
+  # sequences (which is what Backstage / GHA examples use).
+  indentation:
+    spaces: 2
+    indent-sequences: consistent
+
+ignore: |
+  node_modules/
+  .yarn/
+  dist/
+  dist-types/
+  e2e-test-report/
+  coverage/
