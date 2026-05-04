@@ -28,7 +28,7 @@ jobs:
     name: ${{ parameters.agentPoolName }}
   variables:
   - name: sourcePathForScoringData
-    value: ./scoring-data # TODO: create folder with scoring data for your system/entities, see sample-data folder 
+    value: ./scoring-data # TODO: create folder with scoring data for your system/entities, see sample-data folder
   - name: sharepointListId
     value: '12345678-1234-aaaa-bbbb-1234567890aa' # TODO: guid for your list containing answers
   - name: sharepointSiteURL
@@ -56,7 +56,7 @@ jobs:
         '$(sharepointSiteURL)'
       pwsh: true
 
-  # always (e.g. during PR) upload also to DEV storage. if this would cause any issue (like overwriting data from regular main run over branch data), remove it 
+  # always (e.g. during PR) upload also to DEV storage. if this would cause any issue (like overwriting data from regular main run over branch data), remove it
   - task: AzureCLI@2.208.0
     displayName: 'Uploading to DEV storage'
     inputs:

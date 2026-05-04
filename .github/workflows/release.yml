@@ -1,3 +1,6 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# $schema: https://json.schemastore.org/github-workflow.json
+# vim: ft=yaml et sts=2 sw=2 ts=2
 name: Release
 
 on:
@@ -38,8 +41,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: https://registry.npmjs.org/
-	  scope: '@coreweave'
-	  # always-auth: true  # Generally not needed with OIDC, setup-node handles it
+          scope: '@coreweave'
+          # always-auth: true  # Generally not needed with OIDC, setup-node handles it
 
       - name: Install dependencies
         uses: backstage/actions/yarn-install@v0.6.11

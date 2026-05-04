@@ -57,12 +57,12 @@ $scoringTemplate = Get-Content "$systemScoreFolder/@template.json" | ConvertFrom
 $groupNames = $scoringTemplate.areaScores | Select-Object -ExpandProperty title;
 if ($clearFirst) {
     Write-Host "Removing all fields in groups: [$($groupNames -join ',')] ..." -ForegroundColor Yellow;
-    Get-PnPField -List $listId | ForEach-Object { 
+    Get-PnPField -List $listId | ForEach-Object {
         if ($groupNames -contains $_.Group) {
             Write-Host "Removing $($_.InternalName) ..." -ForegroundColor Red;
             Remove-PnPField -List $listId -Identity $_.InternalName -Force:$force;
         }
-    } 
+    }
 }
 
 Write-Host "Getting existing fields in groups: [$($groupNames -join ',')] ..." -ForegroundColor DarkGray;
@@ -147,7 +147,7 @@ foreach ($scoreArea in $scoringTemplate.areaScores) {
             Write-Host "List field for score reasoning not found, creating ..." -ForegroundColor DarkGray;
             $fieldReason = Add-PnPField -List $listId -DisplayName $fieldReasonTitle -InternalName $fieldReasonName -Type Note -Group $scoreArea.title;
         }
-        
+
         $fieldReasonProps = @{
             Title         = $fieldReasonTitle;
             Description   = "Write in details why you gave such score. You may use markdown (e.g for links to documentation etc). See https://dev.azure.com/organization/project/_wiki/wikis/project.wiki/$($scoreEntry.id) for details.";

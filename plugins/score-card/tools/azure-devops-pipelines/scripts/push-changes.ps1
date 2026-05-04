@@ -61,7 +61,7 @@ if ($changesDetected) {
     Write-host "Pushing changes to remote..." -ForegroundColor DarkGray;
     & git push --quiet;
 } else {
-    Write-host "No changes detected..." -ForegroundColor DarkGray;    
+    Write-host "No changes detected..." -ForegroundColor DarkGray;
 }
 
 Write-host "...done" -ForegroundColor Gray

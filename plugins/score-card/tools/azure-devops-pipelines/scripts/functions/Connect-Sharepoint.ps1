@@ -19,7 +19,7 @@ function Connect-Sharepoint (
 ) {
     Write-Host "Connecting to sharepoint..." -ForegroundColor DarkGray;
     if ($null -eq (Get-Command -Name 'Connect-PnPOnline' -ErrorAction SilentlyContinue)) {
-        throw "Please install prerequisities: [Install-Module -Name PnP.PowerShell -RequiredVersion 1.9.0]. ## prerequisity, see also https://pnp.github.io/powershell/cmdlets/Connect-PnPOnline.html#interactive-login-for-multi-factor-authentication";        
+        throw "Please install prerequisities: [Install-Module -Name PnP.PowerShell -RequiredVersion 1.9.0]. ## prerequisity, see also https://pnp.github.io/powershell/cmdlets/Connect-PnPOnline.html#interactive-login-for-multi-factor-authentication";
     }
 
     if ($interactive) {

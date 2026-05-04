@@ -366,3 +366,7 @@ e2e-test-report/
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Schema dumps fetched ad hoc for local YAML validation
+# (e.g. `curl -O https://json.schemastore.org/github-workflow.json`).
+github-workflow.json*
