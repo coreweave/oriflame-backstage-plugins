@@ -81,5 +81,5 @@
       "node ./scripts/check-docs-quality"
     ]
   },
-  "packageManager": "yarn@4.1.1"
+  "packageManager": "yarn@4.10.3"
 }
