@@ -11,7 +11,7 @@
   "version": "0.2.2",
   "private": true,
   "engines": {
-    "node": "18 || 20"
+    "node": "20 || 22"
   },
   "scripts": {
     "dev": "concurrently 'yarn start' 'yarn start-backend' 'http-server -p 8090 --cors 2>&1'",
@@ -46,7 +46,16 @@
     "@types/react-dom": "^18.2.18",
     "dockerode": "3.3.5",
     "@types/dockerode": "3.3.28",
-    "jest-environment-jsdom": "30.0.0-alpha.2"
+    "jest-environment-jsdom": "30.0.0-alpha.2",
+    "isolated-vm": "^5.0.4",
+    "tree-sitter": "^0.22.4",
+    "tree-sitter-json": "^0.24.0",
+    "cpu-features": "^0.0.10"
+  },
+  "dependenciesMeta": {
+    "tree-sitter-yaml@0.5.0": {
+      "built": false
+    }
   },
   "dependencies": {
     "jest-environment-jsdom": "30.0.0-alpha.2"
