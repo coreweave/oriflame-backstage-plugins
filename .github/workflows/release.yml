@@ -63,7 +63,8 @@ jobs:
         uses: changesets/action@v1
         with:
           version: yarn release
-          publish: yarn workspaces foreach --all --no-private --verbose npm publish --access public --tolerate-republish --provenance
+          # --provenance option not available yet
+          publish: yarn workspaces foreach --all --no-private --verbose npm publish --access public --tolerate-republish 
           title: 'Release new version(s)'
           commit: 'chore: release packages'
           createGithubReleases: true
