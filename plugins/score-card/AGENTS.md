@@ -53,11 +53,16 @@ mind — they are all easy to break unintentionally:
   title prefixes (e.g. `L1: …`, `L2: …` entry titles inside one area).
   Don't accept "let's just nest areas" as a quick fix — it's a type change
   *and* a renderer rewrite.
-- **Two URL shapes off one base.** `ScoringDataJsonClient.getAllScores` fetches
-  `<jsonDataUrl>all.json` and expects an array; `getScore(entity)` fetches
-  `<jsonDataUrl><namespace>/<kind>/<name>.json` (lower-cased, `namespace`
-  defaulting to `default`) and expects a single object. Don't change one
-  without the other.
+- **Three URL shapes off one base.** `ScoringDataJsonClient.getAllScores`
+  normally fetches `<jsonDataUrl>all.json` (array). When
+  `scorecards.kindScopedAllJson` is true *and* `entityKindFilter` is exactly
+  one kind, it instead fetches `<jsonDataUrl><kind>/all.json` (array, same
+  shape, just one kind's worth). `getScore(entity)` fetches
+  `<jsonDataUrl><namespace>/<kind>/<name>.json` (single object). All paths are
+  lower-cased; `namespace` defaults to `default`. Don't change one without
+  considering the others. The kind-scoped path is opt-in because static-file
+  hosts (e.g. the sample GitHub setup) won't have `<kind>/all.json` unless
+  someone generates it; dynamic backends can materialize it on demand.
 - **Per-entity override via annotation.** `scorecard/jsonDataUrl` on a catalog
   entity bypasses path construction entirely — the URL is fetched verbatim,
   for both the detail view and (when an entity is in scope) the table view.

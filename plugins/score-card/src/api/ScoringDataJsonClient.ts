@@ -108,7 +108,22 @@ export class ScoringDataJsonClient implements ScoringDataApi {
       urlWithData = jsonFromAnnotation;
     } else {
       const jsonDataUrl = this.getJsonDataUrl();
-      urlWithData = `${jsonDataUrl}all.json`;
+      const kindScopedAllJson =
+        this.configApi.getOptionalBoolean('scorecards.kindScopedAllJson') ??
+        false;
+      const singleKind =
+        kindScopedAllJson && entityKindFilter?.length === 1
+          ? entityKindFilter[0]
+          : undefined;
+      // Kind-scoped aggregate moves the kind filter from the client to the
+      // backend, so it only has to materialize one kind's worth of entities.
+      // Two requirements upstream:
+      //   1. the host serves `<kind>/all.json` alongside `all.json`
+      //   2. the kind segment matches the per-entity URL convention
+      //      (lower-cased), so the host can route both shapes the same way
+      urlWithData = singleKind
+        ? `${jsonDataUrl}${singleKind.toLowerCase()}/all.json`
+        : `${jsonDataUrl}all.json`;
     }
 
     this.logConsole(
@@ -233,10 +248,17 @@ export class ScoringDataJsonClient implements ScoringDataApi {
   }
 
   private getJsonDataUrl() {
-    return (
+    const raw =
       this.configApi.getOptionalString('scorecards.jsonDataUrl') ??
-      'https://unknown-url-please-configure/'
-    );
+      'https://unknown-url-please-configure/';
+    // Callers append path segments (`all.json`, `<kind>/all.json`,
+    // `<namespace>/<kind>/<name>.json`) directly, so the prefix needs a
+    // separator at the end. Two valid configured shapes:
+    //   - bare path:        `https://host/path`  → append `/`
+    //   - query-param sink: `https://host/p?k=`  → already separated by `?`
+    //     and the caller (typically `=`) terminates it; leave as-is
+    if (raw.includes('?')) return raw;
+    return raw.endsWith('/') ? raw : `${raw}/`;
   }
 
   private extendEntityScore(
