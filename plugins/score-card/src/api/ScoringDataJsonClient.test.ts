@@ -451,6 +451,79 @@ describe('ScoringDataJsonClient-getAllScores', () => {
     ]);
   });
 
+  it('should append a trailing slash to a slashless jsonDataUrl', async () => {
+    const catalogApi: jest.Mocked<CatalogApi> = {
+      getEntities: jest.fn(),
+      getEntitiesByRefs: jest.fn(),
+    } as any;
+    catalogApi.getEntitiesByRefs.mockImplementation(getEntitiesByRefMock);
+
+    server.use(
+      rest.get('https://no-slash-host/all.json', (_req, res, ctx) => {
+        return res(ctx.status(200), ctx.json(sampleData));
+      }),
+    );
+
+    const mockConfig = new MockConfigApi({
+      app: { baseUrl: 'https://example.com' },
+      scorecards: {
+        fetchAllEntities: false,
+        jsonDataUrl: 'https://no-slash-host', // no trailing '/'
+      },
+    });
+
+    const api = new ScoringDataJsonClient({
+      configApi: mockConfig,
+      fetchApi: new MockFetchApi(),
+      catalogApi,
+      scmAuthApi,
+      scmIntegrationsApi,
+    });
+
+    const entities = await api.getAllScores();
+    expect(entities).toHaveLength(2);
+  });
+
+  it('should leave a query-param-sink jsonDataUrl untouched', async () => {
+    const catalogApi: jest.Mocked<CatalogApi> = {
+      getEntities: jest.fn(),
+      getEntitiesByRefs: jest.fn(),
+    } as any;
+    catalogApi.getEntitiesByRefs.mockImplementation(getEntitiesByRefMock);
+
+    // msw matches on path; capture the query param inline to confirm the
+    // appended segment ends up in the value slot (not after a forced slash).
+    let receivedEntity: string | null = null;
+    server.use(
+      rest.get('https://proxy.example/transform', (req, res, ctx) => {
+        receivedEntity = req.url.searchParams.get('entity');
+        return res(ctx.status(200), ctx.json(sampleData));
+      }),
+    );
+
+    const mockConfig = new MockConfigApi({
+      app: { baseUrl: 'https://example.com' },
+      scorecards: {
+        fetchAllEntities: false,
+        // Trailing '=' is intentional — the caller wants to land in the
+        // query value, not after another '/'.
+        jsonDataUrl: 'https://proxy.example/transform?entity=',
+      },
+    });
+
+    const api = new ScoringDataJsonClient({
+      configApi: mockConfig,
+      fetchApi: new MockFetchApi(),
+      catalogApi,
+      scmAuthApi,
+      scmIntegrationsApi,
+    });
+
+    const entities = await api.getAllScores();
+    expect(receivedEntity).toBe('all.json');
+    expect(entities).toHaveLength(2);
+  });
+
   describe('getScores', () => {
     it('should retrieve json from location in annotation, with fetchAllScores=false', async () => {
       const entity = {

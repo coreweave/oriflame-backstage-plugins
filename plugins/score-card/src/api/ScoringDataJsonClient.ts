@@ -248,10 +248,17 @@ export class ScoringDataJsonClient implements ScoringDataApi {
   }
 
   private getJsonDataUrl() {
-    return (
+    const raw =
       this.configApi.getOptionalString('scorecards.jsonDataUrl') ??
-      'https://unknown-url-please-configure/'
-    );
+      'https://unknown-url-please-configure/';
+    // Callers append path segments (`all.json`, `<kind>/all.json`,
+    // `<namespace>/<kind>/<name>.json`) directly, so the prefix needs a
+    // separator at the end. Two valid configured shapes:
+    //   - bare path:        `https://host/path`  → append `/`
+    //   - query-param sink: `https://host/p?k=`  → already separated by `?`
+    //     and the caller (typically `=`) terminates it; leave as-is
+    if (raw.includes('?')) return raw;
+    return raw.endsWith('/') ? raw : `${raw}/`;
   }
 
   private extendEntityScore(
