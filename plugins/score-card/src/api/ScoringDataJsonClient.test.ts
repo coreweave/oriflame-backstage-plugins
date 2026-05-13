@@ -346,6 +346,111 @@ describe('ScoringDataJsonClient-getAllScores', () => {
     const entities = await api.getAllScores(['api']);
     expect(entities).toEqual(expected);
   });
+
+  it('should fetch <kind>/all.json when kindScopedAllJson and single kind', async () => {
+    const catalogApi: jest.Mocked<CatalogApi> = {
+      getEntities: jest.fn(),
+      getEntitiesByRefs: jest.fn(),
+    } as any;
+
+    catalogApi.getEntitiesByRefs.mockImplementation(getEntitiesByRefMock);
+
+    // Marker payload distinct from the array served at all.json, so we can
+    // tell which URL was actually hit.
+    const kindScopedData = [
+      {
+        entityRef: { kind: 'system', name: 'System-1' },
+        scorePercent: 99,
+        scoringReviewDate: '2022-01-01T08:00:00Z',
+        scoringReviewer: 'Reviewer-2',
+        areaScores: [],
+      },
+    ];
+
+    server.use(
+      rest.get(
+        'https://unknown-url-please-configure/system/all.json',
+        (_req, res, ctx) => {
+          return res(ctx.status(200), ctx.json(kindScopedData));
+        },
+      ),
+    );
+
+    const mockConfig = new MockConfigApi({
+      app: { baseUrl: 'https://example.com' },
+      scorecards: { fetchAllEntities: false, kindScopedAllJson: true },
+    });
+    const mockFetch = new MockFetchApi();
+
+    const api = new ScoringDataJsonClient({
+      configApi: mockConfig,
+      fetchApi: mockFetch,
+      catalogApi: catalogApi,
+      scmAuthApi,
+      scmIntegrationsApi,
+    });
+
+    const entities = await api.getAllScores(['System']);
+    expect(entities).toEqual([
+      {
+        areaScores: [],
+        entityRef: { kind: 'system', name: 'System-1' },
+        id: 'system:default/system-1',
+        owner: { kind: 'group', name: 'team2', namespace: 'default' },
+        reviewDate: new Date('2022-01-01T08:00:00.000Z'),
+        reviewer: { kind: 'User', name: 'Reviewer-2', namespace: 'default' },
+        scorePercent: 99,
+        scoringReviewDate: '2022-01-01T08:00:00Z',
+        scoringReviewer: 'Reviewer-2',
+      },
+    ]);
+  });
+
+  it('should still hit all.json when kindScopedAllJson and multi-kind filter', async () => {
+    const catalogApi: jest.Mocked<CatalogApi> = {
+      getEntities: jest.fn(),
+      getEntitiesByRefs: jest.fn(),
+    } as any;
+
+    catalogApi.getEntitiesByRefs.mockImplementation(getEntitiesByRefMock);
+
+    // If the kind-scoped URL is mistakenly hit for a multi-kind filter, we
+    // want the test to fail loudly rather than silently fall through to the
+    // all.json handler from beforeEach.
+    server.use(
+      rest.get(
+        'https://unknown-url-please-configure/system/all.json',
+        (_req, res, ctx) => res(ctx.status(500)),
+      ),
+      rest.get(
+        'https://unknown-url-please-configure/api/all.json',
+        (_req, res, ctx) => res(ctx.status(500)),
+      ),
+    );
+
+    const mockConfig = new MockConfigApi({
+      app: { baseUrl: 'https://example.com' },
+      scorecards: { fetchAllEntities: false, kindScopedAllJson: true },
+    });
+    const mockFetch = new MockFetchApi();
+
+    const api = new ScoringDataJsonClient({
+      configApi: mockConfig,
+      fetchApi: mockFetch,
+      catalogApi: catalogApi,
+      scmAuthApi,
+      scmIntegrationsApi,
+    });
+
+    const entities = await api.getAllScores(['api', 'system']);
+    // Both rows survive client-side filter because both kinds were requested
+    expect(entities).toHaveLength(2);
+    expect(entities?.map(e => e.entityRef.name).sort()).toEqual([
+      'Api-1',
+      'System-1',
+    ]);
+  });
+
   describe('getScores', () => {
     it('should retrieve json from location in annotation, with fetchAllScores=false', async () => {
       const entity = {

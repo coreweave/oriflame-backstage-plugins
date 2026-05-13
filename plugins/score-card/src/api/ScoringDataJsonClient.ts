@@ -108,7 +108,22 @@ export class ScoringDataJsonClient implements ScoringDataApi {
       urlWithData = jsonFromAnnotation;
     } else {
       const jsonDataUrl = this.getJsonDataUrl();
-      urlWithData = `${jsonDataUrl}all.json`;
+      const kindScopedAllJson =
+        this.configApi.getOptionalBoolean('scorecards.kindScopedAllJson') ??
+        false;
+      const singleKind =
+        kindScopedAllJson && entityKindFilter?.length === 1
+          ? entityKindFilter[0]
+          : undefined;
+      // Kind-scoped aggregate moves the kind filter from the client to the
+      // backend, so it only has to materialize one kind's worth of entities.
+      // Two requirements upstream:
+      //   1. the host serves `<kind>/all.json` alongside `all.json`
+      //   2. the kind segment matches the per-entity URL convention
+      //      (lower-cased), so the host can route both shapes the same way
+      urlWithData = singleKind
+        ? `${jsonDataUrl}${singleKind.toLowerCase()}/all.json`
+        : `${jsonDataUrl}all.json`;
     }
 
     this.logConsole(

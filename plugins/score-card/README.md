@@ -131,18 +131,28 @@ fields the renderer ignores.
 
 #### File layout under `jsonDataUrl`
 
-The JSON client resolves URLs in two ways:
+The JSON client resolves URLs in three ways:
 
-| View                                  | URL                                                    | Body shape       |
-| ------------------------------------- | ------------------------------------------------------ | ---------------- |
-| Score board / table (all entities)    | `<jsonDataUrl>all.json`                                | `EntityScore[]`  |
-| Single entity (`ScoreCard` / detail)  | `<jsonDataUrl><namespace>/<kind>/<name>.json`          | `EntityScore`    |
+| View                                                    | URL                                                    | Body shape       |
+| ------------------------------------------------------- | ------------------------------------------------------ | ---------------- |
+| Score board / table (all entities)                      | `<jsonDataUrl>all.json`                                | `EntityScore[]`  |
+| Score board / table (one kind, see `kindScopedAllJson`) | `<jsonDataUrl><kind>/all.json`                         | `EntityScore[]`  |
+| Single entity (`ScoreCard` / detail)                    | `<jsonDataUrl><namespace>/<kind>/<name>.json`          | `EntityScore`    |
 
 The per-entity URL is **lower-cased** before the request (
 `namespace`/`kind`/`name` are folded to lowercase, including the trailing
 `.json`), and `namespace` falls back to `default` when the catalog entity has
 no namespace. A `404` is treated as "no score data for this entity" and the
 component renders empty rather than erroring.
+
+The kind-scoped board URL (`<jsonDataUrl><kind>/all.json`) is only used when
+`scorecards.kindScopedAllJson` is true *and* the caller's `entityKindFilter`
+resolves to exactly one kind (which is the common case for `ScoreCardTable`'s
+in-UI kind dropdown). The `<kind>` segment is lower-cased the same way as the
+per-entity path. Zero-kind and multi-kind calls still fetch the aggregate
+`all.json`. The flag is off by default — turn it on when the host
+materializes per-kind aggregates dynamically; a static-file host has to
+produce them alongside `all.json` for this to work.
 
 When an entity carries the `scorecard/jsonDataUrl` annotation, that URL wins
 over the conventional path — the value is fetched verbatim, so it must point
@@ -220,6 +230,7 @@ All configuration options:
 
 - `jsonDataUrl`[optional]: url for the JSON data client, see [ScoringDataJsonClient](#scoringdatajsonclient).
 - `fetchAllEntities`[optional]: if set to `true`, will fetch all the entities from the catalog and filter them afterwards. By default the entities are loaded from the catalog using a filter by name, which may result in `414 Request-URI Too Large`.
+- `kindScopedAllJson`[optional]: if set to `true`, single-kind board views fetch `<jsonDataUrl><kind>/all.json` instead of the aggregate `<jsonDataUrl>all.json`, letting a dynamic backend skip materializing the kinds the user isn't looking at. Off by default — the host must serve per-kind aggregates for this to be useful.
 - `wikiLinkTemplate`[optional]: the template for the link to the wiki. You may use any existing properties from the `EntityScoreEntry`, e.g. `"https://TBD/XXX/_wiki/wikis/XXX.wiki/{id}"` or `"{scoreUrl}"`.
 
 ### How to use the plugin
