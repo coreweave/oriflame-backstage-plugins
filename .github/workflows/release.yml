@@ -60,14 +60,54 @@ jobs:
      #    NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create release PR or publish to npm
+        id: changesets
         uses: changesets/action@v1
         with:
           version: yarn release
           # --provenance option not available yet
-          publish: yarn workspaces foreach --all --no-private --verbose npm publish --access public --tolerate-republish 
+          publish: yarn workspaces foreach --all --no-private --verbose npm publish --access public --tolerate-republish
           title: 'Release new version(s)'
           commit: 'chore: release packages'
           createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # For github release
           #NPM_TOKEN: ${{ secrets.NPM_TOKEN }}  # Not needed with OIDC
+
+      # The custom `publish:` command above (yarn workspaces foreach … npm publish)
+      # does not emit the format changesets/action parses, so its
+      # `published`/`publishedPackages` outputs stay empty and the action never
+      # creates GitHub releases or git tags on its own. Tag from the workspace
+      # state instead: for each non-private package, create
+      # `<unscoped-name>-<version>` if it doesn't already exist, then push.
+      # Idempotent — safe to run on every push to main.
+      - name: Tag published plugin versions
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          created=()
+          while IFS= read -r pkg_json; do
+            private=$(jq -r '.private // false' "$pkg_json")
+            [ "$private" = "true" ] && continue
+            name=$(jq -r '.name' "$pkg_json")
+            version=$(jq -r '.version' "$pkg_json")
+            unscoped="${name##*/}"
+            tag="${unscoped}-${version}"
+            if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+              echo "Tag ${tag} already exists, skipping"
+              continue
+            fi
+            git tag -a "${tag}" -m "Release ${name}@${version}"
+            created+=("${tag}")
+            echo "Created tag ${tag}"
+          done < <(find packages plugins -mindepth 2 -maxdepth 2 -name package.json | sort)
+
+          if [ "${#created[@]}" -gt 0 ]; then
+            git push origin "${created[@]}"
+          else
+            echo "No new tags to push."
+          fi
