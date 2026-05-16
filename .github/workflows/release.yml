@@ -29,6 +29,11 @@ jobs:
     env:
       CI: 'true'
       NODE_OPTIONS: --max-old-space-size=4096
+      # backstage/actions/yarn-install@v0.6.11 transitively calls
+      # actions/cache@v4, whose floating tag still points to a Node 20
+      # commit. Opt this job into Node 24 now; GitHub flips the default
+      # for all JS actions on 2026-06-02.
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
     steps:
       - name: Checkout
