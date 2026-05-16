@@ -47,5 +47,13 @@ export interface Config {
      * @visibility frontend
      */
     fetchAllEntities?: boolean;
+
+    /**
+     * If true and a single entity kind is being shown, fetch `<kind>/all.json`
+     * instead of `all.json` so the backend only has to materialize one kind's
+     * worth of entities. Requires the host to serve the kind-scoped shape.
+     * @visibility frontend
+     */
+    kindScopedAllJson?: boolean;
   };
 }
